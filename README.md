@@ -8,6 +8,7 @@
 - `YJCabin.Client/web`：公开站点 + 轻量后台
 - `YJCabin.Client/desktop`：站长用 Avalonia CMS
 - `content/articles`：文章 Markdown
+- `.cursor/skills`：界面相关 Cursor skills（见 [SKILLS.md](SKILLS.md)）
 
 ## 本地开发
 

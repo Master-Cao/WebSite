@@ -1,0 +1,13 @@
+---
+description: 改 YJCabin 客户端界面时遵循 frontend-design；公开站/作品集走 taste-skill；3D 走 threejs。
+globs: YJCabin.Client/**/*.{tsx,css,axaml,cs}
+alwaysApply: false
+---
+
+# UI 约束
+
+编辑 `YJCabin.Client` 的页面、样式或 Avalonia 视图时，读取并遵循 `.cursor/skills/frontend-design/SKILL.md`。
+
+做公开站、落地页、作品集或专业前端改版时，再读取 `.cursor/skills/taste-skill/SKILL.md`。
+
+在 Web 端做 3D / WebGL / 场景动画时，再读取 `.cursor/skills/threejs/SKILL.md`。
