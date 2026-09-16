@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="YJCabin.Api.Tests/YJCabin.Api.Tests.csproj" />
+  <Project Path="YJCabin.Api/YJCabin.Api.csproj" />
+  <Project Path="YJCabin.Application/YJCabin.Application.csproj" />
+  <Project Path="YJCabin.Domain/YJCabin.Domain.csproj" />
+  <Project Path="YJCabin.Infrastructure/YJCabin.Infrastructure.csproj" />
+</Solution>

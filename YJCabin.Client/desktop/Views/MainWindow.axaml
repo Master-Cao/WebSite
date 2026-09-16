@@ -1,0 +1,120 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:YJCabin.Desktop.ViewModels"
+        x:Class="YJCabin.Desktop.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="YJCabin CMS"
+        Width="1100" Height="720">
+  <Grid>
+    <Grid IsVisible="{Binding !IsAuthenticated}" Margin="40" MaxWidth="420">
+      <StackPanel Spacing="12">
+        <TextBlock FontSize="24" Text="YJCabin 管理端" />
+        <TextBox Watermark="用户名" Text="{Binding UserName}" />
+        <TextBox Watermark="密码" PasswordChar="*" Text="{Binding Password}" />
+        <Button Content="登录" Command="{Binding LoginCommand}" />
+        <TextBlock Text="{Binding Status}" TextWrapping="Wrap" />
+      </StackPanel>
+    </Grid>
+
+    <TabControl IsVisible="{Binding IsAuthenticated}" SelectedIndex="{Binding SelectedTab}">
+      <TabItem Header="作品">
+        <Grid ColumnDefinitions="280,*" Margin="12">
+          <DockPanel Grid.Column="0" Margin="0,0,12,0">
+            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="8">
+              <Button Content="新建" Command="{Binding Projects.NewItemCommand}" />
+              <Button Content="刷新" Command="{Binding Projects.ReloadCommand}" />
+            </StackPanel>
+            <ListBox ItemsSource="{Binding Projects.Items}" SelectedItem="{Binding Projects.Selected}">
+              <ListBox.ItemTemplate>
+                <DataTemplate>
+                  <TextBlock Text="{Binding Title}" />
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </DockPanel>
+          <ScrollViewer Grid.Column="1">
+            <StackPanel Spacing="8">
+              <TextBox Watermark="标题" Text="{Binding Projects.Title}" />
+              <TextBox Watermark="Slug" Text="{Binding Projects.Slug}" />
+              <TextBox Watermark="摘要" AcceptsReturn="True" Height="70" Text="{Binding Projects.Summary}" />
+              <TextBox Watermark="描述" AcceptsReturn="True" Height="160" Text="{Binding Projects.Description}" />
+              <TextBox Watermark="标签，逗号分隔" Text="{Binding Projects.TagsText}" />
+              <TextBox Watermark="状态 Draft/Published/Archived" Text="{Binding Projects.Status}" />
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Content="保存" Command="{Binding Projects.SaveCommand}" />
+                <Button Content="删除" Command="{Binding Projects.DeleteCommand}" />
+              </StackPanel>
+              <TextBlock Text="{Binding Projects.Message}" />
+            </StackPanel>
+          </ScrollViewer>
+        </Grid>
+      </TabItem>
+
+      <TabItem Header="文章">
+        <Grid ColumnDefinitions="280,*" Margin="12">
+          <DockPanel Grid.Column="0" Margin="0,0,12,0">
+            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="8">
+              <Button Content="新建" Command="{Binding Articles.NewItemCommand}" />
+              <Button Content="刷新" Command="{Binding Articles.ReloadCommand}" />
+            </StackPanel>
+            <ListBox ItemsSource="{Binding Articles.Items}" SelectedItem="{Binding Articles.Selected}">
+              <ListBox.ItemTemplate>
+                <DataTemplate>
+                  <TextBlock Text="{Binding Title}" />
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </DockPanel>
+          <ScrollViewer Grid.Column="1">
+            <StackPanel Spacing="8">
+              <TextBox Watermark="标题" Text="{Binding Articles.Title}" />
+              <TextBox Watermark="Slug" Text="{Binding Articles.Slug}" />
+              <TextBox Watermark="摘要" AcceptsReturn="True" Height="70" Text="{Binding Articles.Summary}" />
+              <TextBox Watermark="标签，逗号分隔" Text="{Binding Articles.TagsText}" />
+              <TextBox Watermark="状态 Draft/Published/Archived" Text="{Binding Articles.Status}" />
+              <TextBox Watermark="Markdown 正文" AcceptsReturn="True" Height="280" Text="{Binding Articles.Markdown}" />
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Content="保存" Command="{Binding Articles.SaveCommand}" />
+                <Button Content="删除" Command="{Binding Articles.DeleteCommand}" />
+              </StackPanel>
+              <TextBlock Text="{Binding Articles.Message}" />
+            </StackPanel>
+          </ScrollViewer>
+        </Grid>
+      </TabItem>
+
+      <TabItem Header="关于我">
+        <StackPanel Margin="16" Spacing="8">
+          <TextBox Watermark="标题" Text="{Binding About.Headline}" />
+          <TextBox Watermark="简介 Markdown" AcceptsReturn="True" Height="180" Text="{Binding About.BioMarkdown}" />
+          <TextBox Watermark="技能，逗号分隔" Text="{Binding About.SkillsText}" />
+          <TextBox Watermark="社交 name|url，每行一条" AcceptsReturn="True" Height="80" Text="{Binding About.SocialText}" />
+          <Button Content="保存" Command="{Binding About.SaveCommand}" HorizontalAlignment="Left" />
+          <TextBlock Text="{Binding About.Message}" />
+        </StackPanel>
+      </TabItem>
+
+      <TabItem Header="留言">
+        <Grid ColumnDefinitions="320,*" Margin="12">
+          <ListBox ItemsSource="{Binding Messages.Items}" SelectedItem="{Binding Messages.Selected}">
+            <ListBox.ItemTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding Subject}" />
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+          <StackPanel Grid.Column="1" Margin="16,0,0,0" Spacing="8">
+            <TextBlock Text="{Binding Messages.Selected.Name}" />
+            <TextBlock Text="{Binding Messages.Selected.Email}" />
+            <TextBlock Text="{Binding Messages.Selected.Body}" TextWrapping="Wrap" />
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <Button Content="标为已读" Command="{Binding Messages.MarkReadCommand}" />
+              <Button Content="标为已回复" Command="{Binding Messages.MarkRepliedCommand}" />
+              <Button Content="刷新" Command="{Binding Messages.ReloadCommand}" />
+            </StackPanel>
+          </StackPanel>
+        </Grid>
+      </TabItem>
+    </TabControl>
+  </Grid>
+</Window>

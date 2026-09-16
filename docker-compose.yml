@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: yjcabin-postgres
+    environment:
+      POSTGRES_DB: yjcabin
+      POSTGRES_USER: yjcabin
+      POSTGRES_PASSWORD: yjcabin
+    ports:
+      - "5432:5432"
+    volumes:
+      - yjcabin_pg:/var/lib/postgresql/data
+
+volumes:
+  yjcabin_pg:
