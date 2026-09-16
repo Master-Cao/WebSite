@@ -2,6 +2,7 @@ import { FormEvent, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../../api/client";
 import type { AboutDto } from "../../api/types";
+import { btnPrimary, controlClass, fieldClass } from "../../ui";
 
 export function AboutAdminPage() {
   const query = useQuery({
@@ -39,30 +40,33 @@ export function AboutAdminPage() {
 
   const data = query.data;
   return (
-    <form className="form" onSubmit={onSubmit}>
-      <h1>关于我</h1>
-      <label>
+    <form className="glass panel" onSubmit={onSubmit} style={{ display: "grid", gap: 16, maxWidth: 720 }}>
+      <h1 className="page-title">关于我</h1>
+      <label className={fieldClass}>
         标题
-        <input name="headline" defaultValue={data?.headline} required />
+        <input name="headline" className={controlClass} defaultValue={data?.headline} required />
       </label>
-      <label>
+      <label className={fieldClass}>
         简介 Markdown
-        <textarea name="bioMarkdown" rows={8} defaultValue={data?.bioMarkdown} required />
+        <textarea name="bioMarkdown" rows={8} className={controlClass} defaultValue={data?.bioMarkdown} required />
       </label>
-      <label>
+      <label className={fieldClass}>
         技能（逗号分隔）
-        <input name="skills" defaultValue={data?.skills.join(", ")} />
+        <input name="skills" className={controlClass} defaultValue={data?.skills.join(", ")} />
       </label>
-      <label>
+      <label className={fieldClass}>
         社交链接（每行 name|url）
         <textarea
           name="social"
           rows={4}
+          className={controlClass}
           defaultValue={data?.socialLinks.map((x) => `${x.name}|${x.url}`).join("\n")}
         />
       </label>
-      <button type="submit">保存</button>
-      {status && <p>{status}</p>}
+      <button type="submit" className={`${btnPrimary} w-fit`}>
+        保存
+      </button>
+      {status && <p className="muted">{status}</p>}
     </form>
   );
 }

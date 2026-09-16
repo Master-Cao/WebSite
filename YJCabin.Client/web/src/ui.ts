@@ -1,0 +1,9 @@
+export const glass = "glass";
+export const wrap = "wrap";
+export const fieldClass = "field";
+export const controlClass = "control";
+export const btnPrimary = "btn btn-primary";
+export const btnGhost = "btn btn-ghost";
+export const btnText = "btn-text";
+export const btnDanger = "btn-text is-danger";
+export const tableClass = "data-table";

@@ -17,26 +17,29 @@ export function DashboardPage() {
     queryFn: () => api<PagedResult<ContactMessage>>("/api/admin/contact-messages", {}, true)
   });
 
+  const unread = messages.data?.items.filter((item) => !item.isRead).length ?? 0;
+  const stats = [
+    { label: "作品", value: projects.data?.totalCount ?? 0, hint: "全部条目", to: "/admin/projects" },
+    { label: "文章", value: articles.data?.totalCount ?? 0, hint: "全部条目", to: "/admin/articles" },
+    { label: "留言", value: messages.data?.totalCount ?? 0, hint: unread ? `${unread} 条未读` : "暂无未读", to: "/admin/messages" }
+  ];
+
   return (
-    <div className="stack">
-      <h1>概览</h1>
-      <div className="cards">
-        <div className="card">
-          <h3>作品</h3>
-          <p>{projects.data?.totalCount ?? 0} 个</p>
-          <Link to="/admin/projects">管理</Link>
-        </div>
-        <div className="card">
-          <h3>文章</h3>
-          <p>{articles.data?.totalCount ?? 0} 篇</p>
-          <Link to="/admin/articles">管理</Link>
-        </div>
-        <div className="card">
-          <h3>留言</h3>
-          <p>{messages.data?.totalCount ?? 0} 条</p>
-          <Link to="/admin/messages">处理</Link>
-        </div>
-      </div>
+    <div>
+      <h1 className="page-title">概览</h1>
+      <p className="muted">站点内容的当前规模。</p>
+      <dl className="split section-gap">
+        {stats.map((item) => (
+          <div key={item.label} className="glass panel">
+            <dt className="muted">{item.label}</dt>
+            <dd className="page-title">{item.value}</dd>
+            <p className="muted">{item.hint}</p>
+            <Link to={item.to} className="accent">
+              管理
+            </Link>
+          </div>
+        ))}
+      </dl>
     </div>
   );
 }

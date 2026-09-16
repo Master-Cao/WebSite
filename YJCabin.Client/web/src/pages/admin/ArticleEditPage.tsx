@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../../api/client";
 import type { ArticleDetail, ContentStatus } from "../../api/types";
+import { btnPrimary, controlClass, fieldClass } from "../../ui";
 
 export function ArticleEditPage() {
   const { slug } = useParams();
@@ -49,42 +50,44 @@ export function ArticleEditPage() {
 
   const data = existing.data;
   return (
-    <form className="form" onSubmit={onSubmit}>
-      <h1>{isNew ? "新建文章" : "编辑文章"}</h1>
-      <label>
+    <form className="glass panel" onSubmit={onSubmit} style={{ display: "grid", gap: 16, maxWidth: 720 }}>
+      <h1 className="page-title">{isNew ? "新建文章" : "编辑文章"}</h1>
+      <label className={fieldClass}>
         标题
-        <input name="title" defaultValue={data?.title} required />
+        <input name="title" className={controlClass} defaultValue={data?.title} required />
       </label>
-      <label>
+      <label className={fieldClass}>
         Slug
-        <input name="slug" defaultValue={data?.slug} />
+        <input name="slug" className={controlClass} defaultValue={data?.slug} />
       </label>
-      <label>
+      <label className={fieldClass}>
         摘要
-        <textarea name="summary" defaultValue={data?.summary} required />
+        <textarea name="summary" className={controlClass} defaultValue={data?.summary} required />
       </label>
-      <label>
+      <label className={fieldClass}>
         封面 URL
-        <input name="coverUrl" defaultValue={data?.coverUrl ?? ""} />
+        <input name="coverUrl" className={controlClass} defaultValue={data?.coverUrl ?? ""} />
       </label>
-      <label>
+      <label className={fieldClass}>
         标签（逗号分隔）
-        <input name="tags" defaultValue={data?.tags.map((x) => x.name).join(", ")} />
+        <input name="tags" className={controlClass} defaultValue={data?.tags.map((x) => x.name).join(", ")} />
       </label>
-      <label>
+      <label className={fieldClass}>
         状态
-        <select value={status} onChange={(event) => setStatus(event.target.value as ContentStatus)}>
-          <option value="Draft">Draft</option>
-          <option value="Published">Published</option>
-          <option value="Archived">Archived</option>
+        <select value={status} className={controlClass} onChange={(event) => setStatus(event.target.value as ContentStatus)}>
+          <option value="Draft">草稿</option>
+          <option value="Published">已发布</option>
+          <option value="Archived">已归档</option>
         </select>
       </label>
-      <label>
+      <label className={fieldClass}>
         Markdown
-        <textarea name="markdown" rows={16} defaultValue={data?.markdown} required />
+        <textarea name="markdown" rows={16} className={controlClass} defaultValue={data?.markdown} required />
       </label>
-      <button type="submit">保存</button>
-      {error && <p className="error">{error}</p>}
+      <button type="submit" className={`${btnPrimary} w-fit`}>
+        保存
+      </button>
+      {error && <p className="danger">{error}</p>}
     </form>
   );
 }

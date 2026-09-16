@@ -2,16 +2,20 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { api } from "../api/client";
 import type { AboutDto, ArticleSummary, PagedResult, ProjectSummary } from "../api/types";
-import { TagList } from "../components/TagList";
+import { PetStage } from "../components/Animals";
+import { ArticleRow, WorkRow } from "../components/ContentRows";
+import { Note, SkeletonRows } from "../components/Note";
+import { firstPlainLine } from "../lib/format";
+import { btnGhost, btnPrimary } from "../ui";
 
 export function HomePage() {
   const projects = useQuery({
     queryKey: ["projects", "home"],
-    queryFn: () => api<PagedResult<ProjectSummary>>("/api/projects?pageSize=3")
+    queryFn: () => api<PagedResult<ProjectSummary>>("/api/projects?pageSize=6")
   });
   const articles = useQuery({
     queryKey: ["articles", "home"],
-    queryFn: () => api<PagedResult<ArticleSummary>>("/api/articles?pageSize=3")
+    queryFn: () => api<PagedResult<ArticleSummary>>("/api/articles?pageSize=8")
   });
   const about = useQuery({
     queryKey: ["about"],
@@ -19,41 +23,64 @@ export function HomePage() {
   });
 
   return (
-    <div className="stack">
-      <section className="hero">
-        <p className="eyebrow">Personal studio</p>
-        <h1>{about.data?.headline ?? "YJCabin"}</h1>
-        <p className="lede">作品、文章与关于我，Web 与桌面端共用同一套 API。</p>
-      </section>
-      <section>
-        <div className="section-head">
-          <h2>作品</h2>
-          <Link to="/works">全部</Link>
-        </div>
-        <div className="cards">
-          {projects.data?.items.map((item) => (
-            <Link className="card" key={item.id} to={`/works/${item.slug}`}>
-              <h3>{item.title}</h3>
-              <p>{item.summary}</p>
-              <TagList tags={item.tags} />
+    <div className="wrap home-board">
+      <section className="glass hero home-hero">
+        <div>
+          <p className="kicker">博客</p>
+          <h1 className="display">{about.data?.headline ?? "YJCabin"}</h1>
+          <p className="lede">{firstPlainLine(about.data?.bioMarkdown)}</p>
+          <div className="actions">
+            <Link to="/articles" className={btnPrimary}>
+              阅读文章
             </Link>
-          ))}
+            <Link to="/works" className={btnGhost}>
+              查看作品
+            </Link>
+            <Link to="/about" className={btnGhost}>
+              简介
+            </Link>
+          </div>
         </div>
+        <PetStage />
       </section>
-      <section>
-        <div className="section-head">
+
+      <section className="glass panel home-articles">
+        <div className="chip-row" style={{ justifyContent: "space-between", marginTop: 0 }}>
           <h2>文章</h2>
-          <Link to="/articles">全部</Link>
-        </div>
-        <div className="cards">
-          {articles.data?.items.map((item) => (
-            <Link className="card" key={item.id} to={`/articles/${item.slug}`}>
-              <h3>{item.title}</h3>
-              <p>{item.summary}</p>
-              <TagList tags={item.tags} />
+          <div className="chip-row" style={{ marginTop: 0 }}>
+            <Link to="/articles" className="accent">
+              全部
             </Link>
-          ))}
+            <Link to="/archive" className="accent">
+              归档
+            </Link>
+          </div>
         </div>
+        {articles.isLoading && <SkeletonRows count={4} />}
+        {articles.error && <Note>暂时无法加载文章。</Note>}
+        {!articles.isLoading && !articles.data?.items.length && <Note>还没有发布文章。</Note>}
+        <ul className="row-list">
+          {articles.data?.items.map((item) => (
+            <ArticleRow key={item.id} item={item} href={`/articles/${item.slug}`} />
+          ))}
+        </ul>
+      </section>
+
+      <section className="glass panel home-works">
+        <div className="chip-row" style={{ justifyContent: "space-between", marginTop: 0 }}>
+          <h2>作品</h2>
+          <Link to="/works" className="accent">
+            全部作品
+          </Link>
+        </div>
+        {projects.isLoading && <SkeletonRows />}
+        {projects.error && <Note>暂时无法加载作品。</Note>}
+        {!projects.isLoading && !projects.data?.items.length && <Note>还没有发布作品。</Note>}
+        <ul className="row-list">
+          {projects.data?.items.map((item, index) => (
+            <WorkRow key={item.id} item={item} index={index} href={`/works/${item.slug}`} />
+          ))}
+        </ul>
       </section>
     </div>
   );

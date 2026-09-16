@@ -27,6 +27,12 @@ public sealed class ApiClient
         _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken);
     }
 
+    public void Logout()
+    {
+        AccessToken = null;
+        _http.DefaultRequestHeaders.Authorization = null;
+    }
+
     public Task<PagedResult<ProjectSummary>> ListProjectsAsync(CancellationToken cancellationToken = default) =>
         GetAsync<PagedResult<ProjectSummary>>("/api/admin/projects", true, cancellationToken);
 

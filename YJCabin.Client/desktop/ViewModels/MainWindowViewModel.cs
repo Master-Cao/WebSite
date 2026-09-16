@@ -45,4 +45,13 @@ public partial class MainWindowViewModel : ViewModelBase
             Status = ex.Message;
         }
     }
+
+    [RelayCommand]
+    private void Logout()
+    {
+        _api.Logout();
+        IsAuthenticated = false;
+        Password = "";
+        Status = "已退出，可重新登录。";
+    }
 }

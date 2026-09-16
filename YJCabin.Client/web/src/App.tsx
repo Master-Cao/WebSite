@@ -6,6 +6,7 @@ import { WorksPage } from "./pages/WorksPage";
 import { WorkDetailPage } from "./pages/WorkDetailPage";
 import { ArticlesPage } from "./pages/ArticlesPage";
 import { ArticleDetailPage } from "./pages/ArticleDetailPage";
+import { ArchivePage } from "./pages/ArchivePage";
 import { AboutPage } from "./pages/AboutPage";
 import { ContactPage } from "./pages/ContactPage";
 import { LoginPage } from "./pages/admin/LoginPage";
@@ -26,6 +27,7 @@ export default function App() {
         <Route path="/works/:slug" element={<WorkDetailPage />} />
         <Route path="/articles" element={<ArticlesPage />} />
         <Route path="/articles/:slug" element={<ArticleDetailPage />} />
+        <Route path="/archive" element={<ArchivePage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/contact" element={<ContactPage />} />
       </Route>
