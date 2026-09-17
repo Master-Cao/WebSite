@@ -1,0 +1,22 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="YJCabin.Desktop.Views.LoadingOverlay"
+             x:Name="Root"
+             IsHitTestVisible="True">
+  <Panel Background="#B306101C">
+    <Border Classes="glass"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            MinWidth="240"
+            Padding="28,24">
+      <StackPanel Spacing="16">
+        <ProgressBar Classes="overlay" IsIndeterminate="True" />
+        <TextBlock Classes="muted"
+                   HorizontalAlignment="Center"
+                   TextAlignment="Center"
+                   TextWrapping="Wrap"
+                   Text="{Binding #Root.Message}" />
+      </StackPanel>
+    </Border>
+  </Panel>
+</UserControl>

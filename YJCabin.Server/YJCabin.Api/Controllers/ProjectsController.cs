@@ -20,6 +20,13 @@ public sealed class ProjectsController : ControllerBase
         _projects.ListAsync(query, publishedOnly: true, cancellationToken);
 
     [HttpGet("{slug}")]
-    public Task<Application.Dtos.ProjectDetailDto> Get(string slug, CancellationToken cancellationToken) =>
-        _projects.GetBySlugAsync(slug, publishedOnly: true, cancellationToken);
+    public async Task<ActionResult<Application.Dtos.ProjectDetailDto>> Get(string slug, CancellationToken cancellationToken)
+    {
+        if (!SlugHelper.IsUsable(slug))
+        {
+            return NotFound();
+        }
+
+        return await _projects.GetBySlugAsync(slug, publishedOnly: true, cancellationToken);
+    }
 }

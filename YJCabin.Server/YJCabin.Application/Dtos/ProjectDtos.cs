@@ -9,6 +9,11 @@ public sealed class TagDto
     public required string Slug { get; init; }
 }
 
+public sealed class CreateTagRequest
+{
+    public required string Name { get; init; }
+}
+
 public sealed class ProjectImageDto
 {
     public Guid Id { get; init; }

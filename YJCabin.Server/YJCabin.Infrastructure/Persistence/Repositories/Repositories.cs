@@ -151,13 +151,29 @@ public sealed class TagRepository : ITagRepository
     public async Task<IReadOnlyList<Tag>> ListAsync(CancellationToken cancellationToken = default) =>
         await _db.Tags.OrderBy(x => x.Name).ToListAsync(cancellationToken);
 
+    public Task<Tag?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+        _db.Tags
+            .Include(x => x.ArticleTags)
+            .Include(x => x.ProjectTags)
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+
+    public Task<Tag?> FindByNameAsync(string name, CancellationToken cancellationToken = default)
+    {
+        var key = name.Trim().ToLower();
+        return _db.Tags.FirstOrDefaultAsync(x => x.Name.ToLower() == key, cancellationToken);
+    }
+
+    public void Remove(Tag tag) => _db.Tags.Remove(tag);
+
     public async Task<IReadOnlyList<Tag>> GetOrCreateManyAsync(IEnumerable<string> names, CancellationToken cancellationToken = default)
     {
         var result = new List<Tag>();
         foreach (var raw in names.Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim()).Distinct(StringComparer.OrdinalIgnoreCase))
         {
-            var slug = SlugHelper.From(raw);
-            var existing = await _db.Tags.FirstOrDefaultAsync(x => x.Slug == slug, cancellationToken);
+            var slug = SlugHelper.FromName(raw, "tag");
+            var existing = await _db.Tags.FirstOrDefaultAsync(
+                x => x.Name.ToLower() == raw.ToLower() || x.Slug == slug,
+                cancellationToken);
             if (existing is null)
             {
                 existing = new Tag { Name = raw, Slug = slug };
@@ -226,6 +242,9 @@ public sealed class UserRepository : IUserRepository
 
     public Task<User?> GetByUserNameAsync(string userName, CancellationToken cancellationToken = default) =>
         _db.Users.FirstOrDefaultAsync(x => x.UserName == userName, cancellationToken);
+
+    public Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+        _db.Users.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
     public Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default) =>
         _db.Users.FirstOrDefaultAsync(x => x.RefreshToken == refreshToken, cancellationToken);

@@ -13,9 +13,30 @@ public static partial class SlugHelper
 
     public static string From(string value)
     {
-        if (string.IsNullOrWhiteSpace(value))
+        var slug = Normalize(value);
+        if (string.IsNullOrWhiteSpace(slug))
         {
             throw new ValidationException("slug", "Slug cannot be empty.");
+        }
+
+        return slug;
+    }
+
+    public static string FromTitle(string title) => FromName(title, "article");
+
+    public static string FromName(string value, string fallbackPrefix)
+    {
+        var slug = Normalize(value);
+        return string.IsNullOrWhiteSpace(slug)
+            ? $"{fallbackPrefix}-{Guid.NewGuid().ToString("N")[..8]}"
+            : slug;
+    }
+
+    private static string Normalize(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
         }
 
         var normalized = value.Trim().ToLowerInvariant().Normalize(NormalizationForm.FormD);
@@ -32,15 +53,14 @@ public static partial class SlugHelper
         }
 
         var slug = NonSlugChars().Replace(builder.ToString(), "-");
-        slug = EdgeDashes().Replace(slug, string.Empty);
-        if (string.IsNullOrWhiteSpace(slug))
-        {
-            throw new ValidationException("slug", "Slug cannot be empty after normalization.");
-        }
-
-        return slug;
+        return EdgeDashes().Replace(slug, string.Empty);
     }
 
+    public static bool IsUsable(string? slug) =>
+        !string.IsNullOrWhiteSpace(slug) &&
+        !slug.Equals("undefined", StringComparison.OrdinalIgnoreCase) &&
+        !slug.Equals("null", StringComparison.OrdinalIgnoreCase);
+
     public static bool IsValid(string slug) =>
-        !string.IsNullOrWhiteSpace(slug) && slug == From(slug);
+        IsUsable(slug) && slug == From(slug);
 }

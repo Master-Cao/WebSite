@@ -1,8 +1,10 @@
-import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/client";
 import type { ArticleSummary, PagedResult } from "../api/types";
+import { ReaderLink } from "../components/ContentRows";
+import { pickSlug } from "../lib/content";
 import { Note, SkeletonRows } from "../components/Note";
+import { TagList } from "../components/TagList";
 import { formatDate } from "../lib/format";
 
 async function fetchAllArticles() {
@@ -55,16 +57,30 @@ export function ArchivePage() {
                 <h2>{year}</h2>
                 <p className="row-meta">{items.length} 篇</p>
                 <ul className="row-list">
-                  {items.map((item) => (
+                  {items.map((item) => {
+                    const slug = pickSlug(item);
+                    return (
                     <li key={item.id}>
-                      <Link to={`/articles/${item.slug}`} className="row-link">
+                      {slug ? (
+                      <ReaderLink to={`/articles/${encodeURIComponent(slug)}`} className="row-link">
                         <time className="row-meta" dateTime={item.publishedAt ?? undefined}>
                           {formatDate(item.publishedAt) || "无日期"}
                         </time>
                         <h3>{item.title}</h3>
-                      </Link>
+                        <TagList tags={item.tags} />
+                      </ReaderLink>
+                      ) : (
+                        <div className="row-link">
+                          <time className="row-meta" dateTime={item.publishedAt ?? undefined}>
+                            {formatDate(item.publishedAt) || "无日期"}
+                          </time>
+                          <h3>{item.title}</h3>
+                          <TagList tags={item.tags} />
+                        </div>
+                      )}
                     </li>
-                  ))}
+                    );
+                  })}
                 </ul>
               </section>
             ))}

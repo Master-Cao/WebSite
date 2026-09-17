@@ -57,11 +57,7 @@ public sealed class ArticleService : IArticleService
 
     public async Task<ArticleDetailDto> CreateAsync(UpsertArticleRequest request, CancellationToken cancellationToken = default)
     {
-        var slug = SlugHelper.From(string.IsNullOrWhiteSpace(request.Slug) ? request.Title : request.Slug);
-        if (await _articles.SlugExistsAsync(slug, null, cancellationToken))
-        {
-            throw new ConflictException($"Article slug '{slug}' already exists.");
-        }
+        var slug = await AllocateSlugAsync(request.Title, null, cancellationToken);
 
         var article = new Article { Slug = slug };
         var document = await PersistAsync(article, request, slug, cancellationToken);
@@ -74,18 +70,7 @@ public sealed class ArticleService : IArticleService
     {
         var article = await _articles.GetBySlugAsync(slug, cancellationToken)
                       ?? throw new NotFoundException("Article", slug);
-        var nextSlug = SlugHelper.From(string.IsNullOrWhiteSpace(request.Slug) ? request.Title : request.Slug);
-        if (nextSlug != article.Slug)
-        {
-            if (await _articles.SlugExistsAsync(nextSlug, article.Id, cancellationToken))
-            {
-                throw new ConflictException($"Article slug '{nextSlug}' already exists.");
-            }
-
-            await _contentStore.DeleteAsync(article.Slug, cancellationToken);
-        }
-
-        var document = await PersistAsync(article, request, nextSlug, cancellationToken);
+        var document = await PersistAsync(article, request, article.Slug, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return ToDetail(article, document);
     }
@@ -145,6 +130,19 @@ public sealed class ArticleService : IArticleService
         }
 
         return document;
+    }
+
+    private async Task<string> AllocateSlugAsync(string title, Guid? exceptId, CancellationToken cancellationToken)
+    {
+        var root = SlugHelper.FromTitle(title);
+        var slug = root;
+        var suffix = 2;
+        while (await _articles.SlugExistsAsync(slug, exceptId, cancellationToken))
+        {
+            slug = $"{root}-{suffix++}";
+        }
+
+        return slug;
     }
 
     private ArticleDetailDto ToDetail(Article article, ArticleDocument document) => new()

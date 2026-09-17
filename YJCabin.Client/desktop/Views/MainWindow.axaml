@@ -1,143 +1,192 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:YJCabin.Desktop.ViewModels"
+        xmlns:views="using:YJCabin.Desktop.Views"
         x:Class="YJCabin.Desktop.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Title="YJCabin CMS"
-        Width="1100" Height="720"
-        Background="#06101C">
-  <Grid>
-    <Border IsVisible="{Binding !IsAuthenticated}"
-            HorizontalAlignment="Center"
-            VerticalAlignment="Center"
-            Width="380"
-            Padding="28"
-            Background="#102038"
-            BorderBrush="#2E4A66"
-            BorderThickness="1">
-      <StackPanel Spacing="14">
-        <StackPanel Orientation="Horizontal" Spacing="8">
-            <Rectangle Width="8" Height="8" Fill="#6CF0D2" />
-          <TextBlock FontSize="22" Text="YJCabin" />
-        </StackPanel>
-        <TextBlock Text="登录管理端" Foreground="#5C5C58" />
-        <TextBox Watermark="用户名" Text="{Binding UserName}" />
-        <TextBox Watermark="密码" PasswordChar="*" Text="{Binding Password}" />
-        <Button Content="登录" Command="{Binding LoginCommand}" HorizontalAlignment="Stretch" />
-        <TextBlock Text="{Binding Status}" TextWrapping="Wrap" Foreground="#5C5C58" />
-      </StackPanel>
-    </Border>
-
-    <Grid IsVisible="{Binding IsAuthenticated}" RowDefinitions="52,*">
-      <Border Background="#102038" BorderBrush="#2E4A66" BorderThickness="0,0,0,1">
-        <DockPanel Margin="16,0">
-          <Button DockPanel.Dock="Right" Content="退出" Command="{Binding LogoutCommand}" />
-          <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-            <Rectangle Width="8" Height="8" Fill="#6CF0D2" VerticalAlignment="Center" />
-            <TextBlock VerticalAlignment="Center" FontSize="15" Text="YJCabin CMS" />
+        Title="YJCabin 内容管理"
+        Icon="/Assets/yjcabin-puppy.png"
+        Width="1280" Height="820"
+        MinWidth="960" MinHeight="640">
+  <Panel>
+    <Panel IsHitTestVisible="False">
+      <Border Background="{StaticResource VoidBrush}" />
+      <Ellipse Width="560" Height="560"
+               HorizontalAlignment="Left" VerticalAlignment="Top"
+               Margin="-180,-220,0,0"
+               Fill="#337ECFFF" />
+      <Ellipse Width="480" Height="480"
+               HorizontalAlignment="Right" VerticalAlignment="Top"
+               Margin="0,-160,-160,0"
+               Fill="#247ECFFF" />
+      <Ellipse Width="520" Height="420"
+               HorizontalAlignment="Right" VerticalAlignment="Bottom"
+               Margin="0,0,-180,-160"
+               Fill="#244A7AB0" />
+    </Panel>
+    <Grid IsVisible="{Binding IsAuthenticated}"
+          ColumnDefinitions="248,*"
+          ClipToBounds="True">
+      <Border Grid.Column="0"
+              Classes="glass"
+              Padding="16,18"
+              Margin="12,12,0,12">
+        <DockPanel>
+          <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="4,0,4,16">
+            <TextBlock Classes="kicker" Text="YJCabin" />
+            <TextBlock FontSize="18" FontWeight="SemiBold" Text="内容管理" />
           </StackPanel>
-        </DockPanel>
-      </Border>
-      <TabControl Grid.Row="1" SelectedIndex="{Binding SelectedTab}" Padding="0">
-      <TabItem Header="作品">
-        <Grid ColumnDefinitions="280,*" Margin="12">
-          <DockPanel Grid.Column="0" Margin="0,0,12,0">
-            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
-              <Button Content="新建" Command="{Binding Projects.NewItemCommand}" />
-              <Button Content="刷新" Command="{Binding Projects.ReloadCommand}" />
-            </StackPanel>
-            <ListBox ItemsSource="{Binding Projects.Items}" SelectedItem="{Binding Projects.Selected}">
-              <ListBox.ItemTemplate>
-                <DataTemplate>
-                  <TextBlock Text="{Binding Title}" />
-                </DataTemplate>
-              </ListBox.ItemTemplate>
-            </ListBox>
-          </DockPanel>
-          <ScrollViewer Grid.Column="1">
-            <StackPanel Spacing="8">
-              <TextBox Watermark="标题" Text="{Binding Projects.Title}" />
-              <TextBox Watermark="Slug" Text="{Binding Projects.Slug}" />
-              <TextBox Watermark="摘要" AcceptsReturn="True" Height="70" Text="{Binding Projects.Summary}" />
-              <TextBox Watermark="描述" AcceptsReturn="True" Height="160" Text="{Binding Projects.Description}" />
-              <TextBox Watermark="标签，逗号分隔" Text="{Binding Projects.TagsText}" />
-              <TextBox Watermark="状态 Draft/Published/Archived" Text="{Binding Projects.Status}" />
-              <StackPanel Orientation="Horizontal" Spacing="8">
-                <Button Content="保存" Command="{Binding Projects.SaveCommand}" />
-                <Button Content="删除" Command="{Binding Projects.DeleteCommand}" />
+          <Border DockPanel.Dock="Bottom"
+                  Padding="0,12,0,0"
+                  Margin="0,12,0,0"
+                  BorderBrush="{StaticResource LineBrush}"
+                  BorderThickness="0,1,0,0">
+            <Grid ColumnDefinitions="Auto,*">
+              <Button Classes="avatar"
+                      ToolTip.Tip="账号选项">
+                <Button.Flyout>
+                  <Flyout Placement="Top">
+                    <StackPanel Width="188" Spacing="8">
+                      <TextBlock Classes="muted" Text="当前账号" />
+                      <TextBlock FontWeight="SemiBold" Text="{Binding UserName}" />
+                      <Button Content="修改密码"
+                              Command="{Binding OpenChangePasswordCommand}"
+                              HorizontalAlignment="Stretch"
+                              Margin="0,6,0,0" />
+                      <Button Classes="danger"
+                              Content="退出登录"
+                              Command="{Binding LogoutCommand}"
+                              HorizontalAlignment="Stretch" />
+                    </StackPanel>
+                  </Flyout>
+                </Button.Flyout>
+                <Border Width="38" Height="38" CornerRadius="19" ClipToBounds="True">
+                  <Image Source="avares://YJCabin.Desktop/Assets/avatar.png" Stretch="UniformToFill" />
+                </Border>
+              </Button>
+              <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center" Spacing="2">
+                <TextBlock FontWeight="SemiBold" TextTrimming="CharacterEllipsis" Text="{Binding SiteName}" />
+                <TextBlock Classes="muted" FontSize="12" Text="公开站点" />
               </StackPanel>
-              <TextBlock Text="{Binding Projects.Message}" Foreground="#5C5C58" />
-            </StackPanel>
-          </ScrollViewer>
-        </Grid>
-      </TabItem>
-
-      <TabItem Header="文章">
-        <Grid ColumnDefinitions="280,*" Margin="12">
-          <DockPanel Grid.Column="0" Margin="0,0,12,0">
-            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
-              <Button Content="新建" Command="{Binding Articles.NewItemCommand}" />
-              <Button Content="刷新" Command="{Binding Articles.ReloadCommand}" />
-            </StackPanel>
-            <ListBox ItemsSource="{Binding Articles.Items}" SelectedItem="{Binding Articles.Selected}">
-              <ListBox.ItemTemplate>
-                <DataTemplate>
-                  <TextBlock Text="{Binding Title}" />
-                </DataTemplate>
-              </ListBox.ItemTemplate>
-            </ListBox>
-          </DockPanel>
-          <ScrollViewer Grid.Column="1">
-            <StackPanel Spacing="8">
-              <TextBox Watermark="标题" Text="{Binding Articles.Title}" />
-              <TextBox Watermark="Slug" Text="{Binding Articles.Slug}" />
-              <TextBox Watermark="摘要" AcceptsReturn="True" Height="70" Text="{Binding Articles.Summary}" />
-              <TextBox Watermark="标签，逗号分隔" Text="{Binding Articles.TagsText}" />
-              <TextBox Watermark="状态 Draft/Published/Archived" Text="{Binding Articles.Status}" />
-              <TextBox Watermark="Markdown 正文" AcceptsReturn="True" Height="280" Text="{Binding Articles.Markdown}" />
-              <StackPanel Orientation="Horizontal" Spacing="8">
-                <Button Content="保存" Command="{Binding Articles.SaveCommand}" />
-                <Button Content="删除" Command="{Binding Articles.DeleteCommand}" />
-              </StackPanel>
-              <TextBlock Text="{Binding Articles.Message}" Foreground="#5C5C58" />
-            </StackPanel>
-          </ScrollViewer>
-        </Grid>
-      </TabItem>
-
-      <TabItem Header="关于我">
-        <StackPanel Margin="16" Spacing="8">
-          <TextBox Watermark="标题" Text="{Binding About.Headline}" />
-          <TextBox Watermark="简介 Markdown" AcceptsReturn="True" Height="180" Text="{Binding About.BioMarkdown}" />
-          <TextBox Watermark="技能，逗号分隔" Text="{Binding About.SkillsText}" />
-          <TextBox Watermark="社交 name|url，每行一条" AcceptsReturn="True" Height="80" Text="{Binding About.SocialText}" />
-          <Button Content="保存" Command="{Binding About.SaveCommand}" HorizontalAlignment="Left" />
-          <TextBlock Text="{Binding About.Message}" Foreground="#5C5C58" />
-        </StackPanel>
-      </TabItem>
-
-      <TabItem Header="留言">
-        <Grid ColumnDefinitions="320,*" Margin="12">
-          <ListBox ItemsSource="{Binding Messages.Items}" SelectedItem="{Binding Messages.Selected}">
+            </Grid>
+          </Border>
+          <ListBox Classes="nav"
+                   ItemsSource="{Binding NavItems}"
+                   SelectedItem="{Binding SelectedNav}">
             <ListBox.ItemTemplate>
-              <DataTemplate>
-                <TextBlock Text="{Binding Subject}" />
+              <DataTemplate x:DataType="vm:NavItem">
+                <StackPanel Spacing="2">
+                  <TextBlock FontWeight="SemiBold" Text="{Binding Title}" />
+                  <TextBlock Classes="muted" FontSize="12" Text="{Binding Hint}" />
+                </StackPanel>
               </DataTemplate>
             </ListBox.ItemTemplate>
           </ListBox>
-          <StackPanel Grid.Column="1" Margin="16,0,0,0" Spacing="8">
-            <TextBlock Text="{Binding Messages.Selected.Name}" />
-            <TextBlock Text="{Binding Messages.Selected.Email}" Foreground="#5C5C58" />
-            <TextBlock Text="{Binding Messages.Selected.Body}" TextWrapping="Wrap" />
-            <StackPanel Orientation="Horizontal" Spacing="8">
-              <Button Content="标为已读" Command="{Binding Messages.MarkReadCommand}" />
-              <Button Content="标为已回复" Command="{Binding Messages.MarkRepliedCommand}" />
-              <Button Content="刷新" Command="{Binding Messages.ReloadCommand}" />
+        </DockPanel>
+      </Border>
+
+      <ContentControl Grid.Column="1"
+                      Margin="12"
+                      ClipToBounds="True"
+                      Content="{Binding CurrentPage}">
+        <ContentControl.DataTemplates>
+          <DataTemplate DataType="vm:ProjectsViewModel">
+            <views:ProjectsPage DataContext="{Binding}" />
+          </DataTemplate>
+          <DataTemplate DataType="vm:ArticlesViewModel">
+            <views:ArticlesPage DataContext="{Binding}" />
+          </DataTemplate>
+          <DataTemplate DataType="vm:AboutViewModel">
+            <views:AboutPage DataContext="{Binding}" />
+          </DataTemplate>
+          <DataTemplate DataType="vm:MessagesViewModel">
+            <views:MessagesPage DataContext="{Binding}" />
+          </DataTemplate>
+          <DataTemplate DataType="vm:SettingsViewModel">
+            <views:SettingsPage DataContext="{Binding}" />
+          </DataTemplate>
+        </ContentControl.DataTemplates>
+      </ContentControl>
+    </Grid>
+
+    <Panel IsVisible="{Binding !IsAuthenticated}">
+      <Border Classes="glass"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Width="420"
+                Padding="36,40">
+          <StackPanel>
+            <TextBlock Classes="kicker" Text="YJCabin 管理端" />
+            <TextBlock Classes="title" Margin="0,8,0,0" Text="欢迎回来" />
+            <TextBlock Classes="muted" Margin="0,8,0,0" TextWrapping="Wrap"
+                       Text="登录后即可发布文章、作品，并更新简介与联系方式。" />
+
+            <StackPanel Margin="0,28,0,0" Spacing="16">
+              <StackPanel>
+                <TextBlock Classes="label" Text="用户名" />
+                <TextBox Watermark="请输入管理员账号"
+                         Text="{Binding UserName}" />
+              </StackPanel>
+              <StackPanel>
+                <TextBlock Classes="label" Text="密码" />
+                <TextBox PasswordChar="*"
+                         Watermark="请输入密码"
+                         Text="{Binding Password}" />
+              </StackPanel>
+            </StackPanel>
+
+            <Button Classes="primary"
+                    Content="登录"
+                    Command="{Binding LoginCommand}"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    IsDefault="True"
+                    Margin="0,28,0,0" />
+
+            <TextBlock Classes="danger"
+                       Margin="0,14,0,0"
+                       IsVisible="{Binding HasLoginError}"
+                       Text="{Binding LoginError}" />
+          </StackPanel>
+        </Border>
+    </Panel>
+
+    <Panel IsVisible="{Binding IsChangePasswordOpen}" Background="#B306101C">
+      <Border Classes="glass"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Center"
+              Width="420"
+              Padding="32,34">
+        <StackPanel>
+          <TextBlock Classes="kicker" Text="账号安全" />
+          <TextBlock Classes="title" Margin="0,8,0,0" Text="修改密码" />
+          <TextBlock Classes="muted" Margin="0,8,0,0" TextWrapping="Wrap" Text="修改后请妥善保存新密码。" />
+          <StackPanel Margin="0,24,0,0" Spacing="14">
+            <StackPanel>
+              <TextBlock Classes="label" Text="当前密码" />
+              <TextBox PasswordChar="*" Watermark="请输入当前密码" Text="{Binding CurrentPassword}" />
+            </StackPanel>
+            <StackPanel>
+              <TextBlock Classes="label" Text="新密码" />
+              <TextBox PasswordChar="*" Watermark="至少 8 位" Text="{Binding NewPassword}" />
+            </StackPanel>
+            <StackPanel>
+              <TextBlock Classes="label" Text="确认新密码" />
+              <TextBox PasswordChar="*" Watermark="再输入一次新密码" Text="{Binding ConfirmPassword}" />
             </StackPanel>
           </StackPanel>
-        </Grid>
-      </TabItem>
-      </TabControl>
-    </Grid>
-  </Grid>
+          <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,24,0,0">
+            <Button Classes="primary" Content="保存" Command="{Binding ChangePasswordCommand}" />
+            <Button Content="取消" Command="{Binding CloseChangePasswordCommand}" />
+          </StackPanel>
+          <TextBlock Classes="kicker" Margin="0,12,0,0" IsVisible="{Binding PasswordSucceeded}" Text="{Binding PasswordMessage}" />
+          <TextBlock Classes="danger" Margin="0,12,0,0" IsVisible="{Binding HasPasswordError}" Text="{Binding PasswordMessage}" />
+        </StackPanel>
+      </Border>
+    </Panel>
+
+    <views:LoadingOverlay IsVisible="{Binding Busy.IsBusy}"
+                          Message="{Binding Busy.Message}" />
+  </Panel>
 </Window>

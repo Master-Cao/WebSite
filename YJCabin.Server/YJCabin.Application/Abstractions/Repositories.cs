@@ -37,7 +37,10 @@ public interface IArticleRepository
 public interface ITagRepository
 {
     Task<IReadOnlyList<Tag>> ListAsync(CancellationToken cancellationToken = default);
+    Task<Tag?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<Tag?> FindByNameAsync(string name, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Tag>> GetOrCreateManyAsync(IEnumerable<string> names, CancellationToken cancellationToken = default);
+    void Remove(Tag tag);
 }
 
 public interface IAboutRepository
@@ -56,6 +59,7 @@ public interface IContactRepository
 public interface IUserRepository
 {
     Task<User?> GetByUserNameAsync(string userName, CancellationToken cancellationToken = default);
+    Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default);
     Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default);
     Task AddAsync(User user, CancellationToken cancellationToken = default);

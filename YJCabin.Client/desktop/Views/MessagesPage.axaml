@@ -1,0 +1,125 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:YJCabin.Desktop.ViewModels"
+             xmlns:svc="using:YJCabin.Desktop.Services"
+             x:Class="YJCabin.Desktop.Views.MessagesPage"
+             x:Name="PageRoot"
+             x:DataType="vm:MessagesViewModel">
+  <DockPanel>
+    <Border Classes="glass" DockPanel.Dock="Top" Margin="0,0,0,12">
+      <Border Classes="card-head" BorderThickness="0">
+        <Button Classes="compact"
+                Content="刷新"
+                Command="{Binding ReloadCommand}"
+                HorizontalAlignment="Right" />
+      </Border>
+    </Border>
+
+    <ScrollViewer IsVisible="{Binding !ShowDetail}">
+      <Panel>
+        <TextBlock Classes="muted"
+                   IsVisible="{Binding !HasItems}"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   Text="暂无留言。" />
+        <ItemsControl ItemsSource="{Binding Items}" IsVisible="{Binding HasItems}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <WrapPanel />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="svc:ContactMessageDto">
+              <Button Classes="tile"
+                      Command="{Binding #PageRoot.((vm:MessagesViewModel)DataContext).OpenItemCommand}"
+                      CommandParameter="{Binding}">
+                <Grid ColumnDefinitions="Auto,*">
+                  <Panel Width="32" Height="32" Margin="0,2,10,0" VerticalAlignment="Top">
+                    <Border Classes="status-icon unread"
+                            IsVisible="{Binding !IsRead}"
+                            ToolTip.Tip="未读">
+                      <Path Classes="icon"
+                            Data="{StaticResource IconMailUnread}"
+                            Fill="{StaticResource AccentBrush}"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center" />
+                    </Border>
+                    <Border Classes="status-icon read"
+                            IsVisible="{Binding IsRead}"
+                            ToolTip.Tip="已读">
+                      <Path Classes="icon"
+                            Data="{StaticResource IconMailRead}"
+                            Fill="{StaticResource MutedBrush}"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center" />
+                    </Border>
+                    <Ellipse Width="8" Height="8"
+                             Fill="{StaticResource AccentBrush}"
+                             HorizontalAlignment="Right"
+                             VerticalAlignment="Top"
+                             Margin="0,-2,-2,0"
+                             IsVisible="{Binding !IsRead}" />
+                  </Panel>
+                  <StackPanel Grid.Column="1">
+                    <TextBlock Classes="tile-title" Text="{Binding Subject}" />
+                    <TextBlock Classes="tile-summary" Text="{Binding Name}" />
+                    <TextBlock Classes="tile-summary" MaxHeight="40" Text="{Binding Body}" />
+                  </StackPanel>
+                </Grid>
+              </Button>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </Panel>
+    </ScrollViewer>
+
+    <Border Classes="glass" Padding="22" IsVisible="{Binding ShowDetail}" ClipToBounds="True">
+      <DockPanel>
+        <StackPanel DockPanel.Dock="Bottom" Spacing="8" Margin="0,16,0,0">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <Button Classes="primary compact" Content="标为已读" Command="{Binding MarkReadCommand}" />
+            <Button Classes="compact" Content="标为已回复" Command="{Binding MarkRepliedCommand}" />
+            <Button Classes="compact" Content="返回" Command="{Binding CloseDetailCommand}" />
+          </StackPanel>
+          <TextBlock Classes="muted" Text="{Binding Message}" />
+        </StackPanel>
+        <ScrollViewer>
+          <StackPanel Spacing="10">
+            <DockPanel>
+              <Panel DockPanel.Dock="Left" Width="32" Height="32" Margin="0,2,12,0">
+                <Border Classes="status-icon unread"
+                        IsVisible="{Binding !Selected.IsRead}"
+                        ToolTip.Tip="未读">
+                  <Path Classes="icon"
+                        Data="{StaticResource IconMailUnread}"
+                        Fill="{StaticResource AccentBrush}"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center" />
+                </Border>
+                <Border Classes="status-icon read"
+                        IsVisible="{Binding Selected.IsRead}"
+                        ToolTip.Tip="已读">
+                  <Path Classes="icon"
+                        Data="{StaticResource IconMailRead}"
+                        Fill="{StaticResource MutedBrush}"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center" />
+                </Border>
+                <Ellipse Width="8" Height="8"
+                         Fill="{StaticResource AccentBrush}"
+                         HorizontalAlignment="Right"
+                         VerticalAlignment="Top"
+                         Margin="0,-2,-2,0"
+                         IsVisible="{Binding !Selected.IsRead}" />
+              </Panel>
+              <TextBlock Classes="title" Text="{Binding Selected.Subject}" TextWrapping="Wrap" VerticalAlignment="Center" />
+            </DockPanel>
+            <TextBlock FontSize="16" Text="{Binding Selected.Name}" />
+            <TextBlock Classes="muted" Text="{Binding Selected.Email}" />
+            <TextBlock Text="{Binding Selected.Body}" TextWrapping="Wrap" />
+          </StackPanel>
+        </ScrollViewer>
+      </DockPanel>
+    </Border>
+  </DockPanel>
+</UserControl>

@@ -38,6 +38,7 @@ public interface IAuthService
 {
     Task<AuthResponse> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default);
     Task<AuthResponse> RefreshAsync(RefreshTokenRequest request, CancellationToken cancellationToken = default);
+    Task ChangePasswordAsync(Guid userId, ChangePasswordRequest request, CancellationToken cancellationToken = default);
 }
 
 public interface IMediaService
@@ -48,4 +49,6 @@ public interface IMediaService
 public interface ITagService
 {
     Task<IReadOnlyList<TagDto>> ListAsync(CancellationToken cancellationToken = default);
+    Task<TagDto> CreateAsync(string name, CancellationToken cancellationToken = default);
+    Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 }

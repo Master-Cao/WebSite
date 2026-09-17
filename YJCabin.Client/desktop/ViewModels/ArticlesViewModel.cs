@@ -8,60 +8,126 @@ namespace YJCabin.Desktop.ViewModels;
 public partial class ArticlesViewModel : ViewModelBase
 {
     private readonly ApiClient _api;
+    private readonly BusyController _busy;
+
     [ObservableProperty] private ObservableCollection<ArticleSummary> _items = [];
     [ObservableProperty] private ArticleSummary? _selected;
+    [ObservableProperty] private bool _isCreating;
     [ObservableProperty] private string _slug = "";
     [ObservableProperty] private string _title = "";
     [ObservableProperty] private string _summary = "";
     [ObservableProperty] private string _markdown = "";
-    [ObservableProperty] private string _tagsText = "";
+    [ObservableProperty] private ObservableCollection<TagChoice> _tagChoices = [];
     [ObservableProperty] private string _status = "Draft";
     [ObservableProperty] private string _message = "";
 
-    public ArticlesViewModel(ApiClient api)
+    public bool HasItems => Items.Count > 0;
+    public bool ShowEditor => IsCreating || Selected is not null;
+    public bool CanDelete => Selected is not null;
+    public bool HasMarkdown => !string.IsNullOrWhiteSpace(Markdown);
+    public string EditorTitle => IsCreating ? "新建文章" : "编辑文章";
+    public string SlugHint => IsCreating || string.IsNullOrWhiteSpace(Slug)
+        ? "保存后会根据标题自动生成网址"
+        : $"/articles/{Slug}";
+
+    public ArticlesViewModel(ApiClient api, BusyController busy)
     {
         _api = api;
+        _busy = busy;
     }
+
+    partial void OnItemsChanged(ObservableCollection<ArticleSummary> value) =>
+        OnPropertyChanged(nameof(HasItems));
 
     partial void OnSelectedChanged(ArticleSummary? value)
     {
-        if (value is not null)
+        NotifyEditor();
+        if (value is null)
         {
-            _ = LoadDetailAsync(value.Slug);
+            return;
+        }
+
+        IsCreating = false;
+        _ = LoadDetailAsync(value.Slug);
+    }
+
+    partial void OnIsCreatingChanged(bool value) => NotifyEditor();
+
+    partial void OnSlugChanged(string value) => OnPropertyChanged(nameof(SlugHint));
+
+    partial void OnMarkdownChanged(string value) => OnPropertyChanged(nameof(HasMarkdown));
+
+    [RelayCommand]
+    public Task ReloadAsync() => _busy.RunAsync("正在加载文章…", LoadListAsync);
+
+    private async Task LoadListAsync()
+    {
+        var result = await _api.ListArticlesAsync();
+        var slug = Selected?.Slug;
+        Items = new ObservableCollection<ArticleSummary>(result.Items);
+        Selected = slug is null ? null : Items.FirstOrDefault(item => item.Slug == slug);
+        if (Selected is null && !IsCreating)
+        {
+            Message = Items.Count == 0 ? "还没有文章，点击新建开始。" : "";
         }
     }
 
     [RelayCommand]
-    public async Task ReloadAsync()
-    {
-        var result = await _api.ListArticlesAsync();
-        Items = new ObservableCollection<ArticleSummary>(result.Items);
-    }
+    private Task NewItem() => _busy.RunAsync("正在准备编辑器…", StartNewAsync);
 
-    [RelayCommand]
-    private void NewItem()
+    private async Task StartNewAsync()
     {
+        IsCreating = true;
         Selected = null;
-        Slug = Title = Summary = Markdown = TagsText = "";
+        Slug = Title = Summary = Markdown = "";
         Status = "Draft";
+        Message = "";
+        await LoadTagChoicesAsync([]);
     }
 
     [RelayCommand]
-    private async Task SaveAsync()
+    private Task SaveAsync() => _busy.RunAsync("正在保存文章…", () => SaveCoreAsync(false));
+
+    [RelayCommand]
+    private Task PublishAsync() => _busy.RunAsync("正在发布文章…", () => SaveCoreAsync(true));
+
+    private async Task SaveCoreAsync(bool publish)
     {
+        if (string.IsNullOrWhiteSpace(Title) || string.IsNullOrWhiteSpace(Markdown))
+        {
+            Message = "请填写标题和正文后再保存。";
+            return;
+        }
+
         try
         {
-            var saved = await _api.SaveArticleAsync(Selected?.Slug, new UpsertArticleRequest
+            if (publish)
             {
-                Slug = string.IsNullOrWhiteSpace(Slug) ? null : Slug,
-                Title = Title,
+                Status = "Published";
+            }
+
+            var currentSlug = IsCreating ? null : Selected?.Slug;
+            var saved = await _api.SaveArticleAsync(currentSlug, new UpsertArticleRequest
+            {
+                Slug = null,
+                Title = Title.Trim(),
                 Summary = Summary,
                 Markdown = Markdown,
                 Status = Status,
-                Tags = TagsText.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList()
+                Tags = TagCatalog.SelectedNames(TagChoices)
             });
-            Message = $"已保存 {saved.Slug}";
-            await ReloadAsync();
+            IsCreating = false;
+            Slug = saved.Slug;
+            if (publish || saved.Status == "Published")
+            {
+                await ReturnToListAsync($"已发布「{saved.Title}」。");
+                return;
+            }
+
+            Message = "已保存草稿。";
+            var result = await _api.ListArticlesAsync();
+            Items = new ObservableCollection<ArticleSummary>(result.Items);
+            Selected = Items.FirstOrDefault(item => item.Slug == saved.Slug);
         }
         catch (Exception ex)
         {
@@ -70,7 +136,9 @@ public partial class ArticlesViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private async Task DeleteAsync()
+    private Task DeleteAsync() => _busy.RunAsync("正在删除文章…", DeleteCoreAsync);
+
+    private async Task DeleteCoreAsync()
     {
         if (Selected is null)
         {
@@ -78,11 +146,52 @@ public partial class ArticlesViewModel : ViewModelBase
         }
 
         await _api.DeleteArticleAsync(Selected.Slug);
-        NewItem();
-        await ReloadAsync();
+        IsCreating = false;
+        Selected = null;
+        Slug = Title = Summary = Markdown = "";
+        TagChoices = [];
+        Status = "Draft";
+        Message = "已删除";
+        await LoadListAsync();
     }
 
-    private async Task LoadDetailAsync(string slug)
+    private async Task ReturnToListAsync(string message)
+    {
+        IsCreating = false;
+        Selected = null;
+        var result = await _api.ListArticlesAsync();
+        Items = new ObservableCollection<ArticleSummary>(result.Items);
+        Message = Items.Count == 0 ? "还没有文章，点击新建开始。" : message;
+    }
+
+    [RelayCommand]
+    private void OpenItem(ArticleSummary? item)
+    {
+        if (item is null)
+        {
+            return;
+        }
+
+        Selected = item;
+    }
+
+    [RelayCommand]
+    private void CloseEditor()
+    {
+        IsCreating = false;
+        Selected = null;
+        Message = "";
+    }
+
+    private void NotifyEditor()
+    {
+        OnPropertyChanged(nameof(ShowEditor));
+        OnPropertyChanged(nameof(CanDelete));
+        OnPropertyChanged(nameof(EditorTitle));
+        OnPropertyChanged(nameof(SlugHint));
+    }
+
+    private Task LoadDetailAsync(string slug) => _busy.RunAsync("正在打开文章…", async () =>
     {
         var detail = await _api.GetArticleAsync(slug);
         Slug = detail.Slug;
@@ -90,6 +199,11 @@ public partial class ArticlesViewModel : ViewModelBase
         Summary = detail.Summary;
         Markdown = detail.Markdown;
         Status = detail.Status;
-        TagsText = string.Join(", ", detail.Tags.Select(x => x.Name));
+        await LoadTagChoicesAsync(detail.Tags.Select(x => x.Name));
+    });
+
+    private async Task LoadTagChoicesAsync(IEnumerable<string> selected)
+    {
+        TagChoices = await TagCatalog.LoadAsync(_api, selected);
     }
 }

@@ -73,3 +73,34 @@ public sealed class AdminMediaController : ControllerBase
         return Created(asset.Url, asset);
     }
 }
+
+[ApiController]
+[Authorize(Roles = "Admin")]
+[Route("api/admin/tags")]
+public sealed class AdminTagsController : ControllerBase
+{
+    private readonly ITagService _tags;
+
+    public AdminTagsController(ITagService tags)
+    {
+        _tags = tags;
+    }
+
+    [HttpGet]
+    public Task<IReadOnlyList<TagDto>> List(CancellationToken cancellationToken) =>
+        _tags.ListAsync(cancellationToken);
+
+    [HttpPost]
+    public async Task<ActionResult<TagDto>> Create(CreateTagRequest request, CancellationToken cancellationToken)
+    {
+        var created = await _tags.CreateAsync(request.Name, cancellationToken);
+        return CreatedAtAction(nameof(List), created);
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+    {
+        await _tags.DeleteAsync(id, cancellationToken);
+        return NoContent();
+    }
+}

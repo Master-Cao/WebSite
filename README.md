@@ -5,8 +5,8 @@
 ## 结构
 
 - `YJCabin.Server`：四层 Web API（Api / Application / Domain / Infrastructure）
-- `YJCabin.Client/web`：公开站点 + 轻量后台
-- `YJCabin.Client/desktop`：站长用 Avalonia CMS
+- `YJCabin.Client/web`：公开站点
+- `YJCabin.Client/desktop`：站长用 Avalonia CMS（发布文章、作品与简介）
 - `content/articles`：文章 Markdown
 - `.cursor/skills`：界面相关 Cursor skills（见 [SKILLS.md](SKILLS.md)）
 
@@ -17,7 +17,6 @@
 3. 启动 Web：在 `YJCabin.Client/web` 执行 `npm install` 后 `npm run dev`
 4. 启动桌面 CMS：`dotnet run --project YJCabin.Client/desktop`
 
-默认管理员：`admin` / `ChangeMe!123`  
+默认管理员（仅桌面 CMS）：`admin` / `ChangeMe!123`  
 Swagger：http://localhost:5178/swagger  
-Web：http://localhost:5173  
-后台：http://localhost:5173/admin/login
+Web：http://localhost:5173

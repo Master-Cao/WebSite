@@ -34,7 +34,7 @@ public sealed class ProjectService : IProjectService
 
     public async Task<ProjectDetailDto> GetBySlugAsync(string slug, bool publishedOnly, CancellationToken cancellationToken = default)
     {
-        var project = await _projects.GetBySlugAsync(slug, cancellationToken)
+        var project = await FindAsync(slug, cancellationToken)
                       ?? throw new NotFoundException("Project", slug);
         if (publishedOnly && project.Status != ContentStatus.Published)
         {
@@ -42,6 +42,24 @@ public sealed class ProjectService : IProjectService
         }
 
         return project.ToDetail();
+    }
+
+    private async Task<Project?> FindAsync(string key, CancellationToken cancellationToken)
+    {
+        if (!SlugHelper.IsUsable(key))
+        {
+            return null;
+        }
+
+        var project = await _projects.GetBySlugAsync(key, cancellationToken);
+        if (project is not null)
+        {
+            return project;
+        }
+
+        return Guid.TryParse(key, out var id)
+            ? await _projects.GetByIdAsync(id, cancellationToken)
+            : null;
     }
 
     public async Task<ProjectDetailDto> CreateAsync(UpsertProjectRequest request, CancellationToken cancellationToken = default)

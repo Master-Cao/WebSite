@@ -1,0 +1,109 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:YJCabin.Desktop.ViewModels"
+             xmlns:svc="using:YJCabin.Desktop.Services"
+             xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+             x:Class="YJCabin.Desktop.Views.SettingsPage"
+             x:Name="PageRoot"
+             x:DataType="vm:SettingsViewModel">
+  <Grid RowDefinitions="Auto,*">
+    <Border Classes="glass" Padding="16,12" Margin="0,0,0,12">
+      <DockPanel>
+        <Button DockPanel.Dock="Right" Classes="compact" Content="刷新" Command="{Binding ReloadCommand}" />
+        <StackPanel VerticalAlignment="Center" Spacing="2">
+          <TextBlock Classes="kicker" Text="设置" />
+          <TextBlock Classes="muted" Text="在这里维护文章标签和公开站技能芯片" />
+        </StackPanel>
+      </DockPanel>
+    </Border>
+
+    <Grid Grid.Row="1" ColumnDefinitions="*,14,*">
+      <Border Classes="glass" Padding="22">
+        <Grid RowDefinitions="Auto,Auto,*,Auto">
+          <TextBlock Classes="kicker" Text="文章标签" />
+          <TextBlock Grid.Row="1"
+                     Classes="muted"
+                     Margin="0,8,0,0"
+                     TextWrapping="Wrap"
+                     Text="写文章时只能点选这里已有的标签。" />
+          <ScrollViewer Grid.Row="2" Margin="0,16,0,0">
+            <ItemsControl ItemsSource="{Binding Tags}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <WrapPanel />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="svc:TagDto">
+                  <Border Classes="setting-chip" Margin="0,0,8,8">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <TextBlock VerticalAlignment="Center" Text="{Binding Name}" />
+                      <Button Classes="chip-remove"
+                              Content="×"
+                              Command="{Binding #PageRoot.((vm:SettingsViewModel)DataContext).RemoveTagCommand}"
+                              CommandParameter="{Binding}" />
+                    </StackPanel>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+          <DockPanel Grid.Row="3" Margin="0,16,0,0">
+            <Button DockPanel.Dock="Right"
+                    Classes="primary compact"
+                    Content="添加"
+                    Command="{Binding AddTagCommand}"
+                    Margin="8,0,0,0" />
+            <TextBox Watermark="新标签名称" Text="{Binding NewTagName}" />
+          </DockPanel>
+        </Grid>
+      </Border>
+
+      <Border Grid.Column="2" Classes="glass" Padding="22">
+        <Grid RowDefinitions="Auto,Auto,*,Auto,Auto">
+          <TextBlock Classes="kicker" Text="技能芯片" />
+          <TextBlock Grid.Row="1"
+                     Classes="muted"
+                     Margin="0,8,0,0"
+                     TextWrapping="Wrap"
+                     Text="会显示在公开站左侧栏。" />
+          <ScrollViewer Grid.Row="2" Margin="0,16,0,0">
+            <ItemsControl ItemsSource="{Binding Skills}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <WrapPanel />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="sys:String">
+                  <Border Classes="setting-chip" Margin="0,0,8,8">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <TextBlock VerticalAlignment="Center" Text="{Binding}" />
+                      <Button Classes="chip-remove"
+                              Content="×"
+                              Command="{Binding #PageRoot.((vm:SettingsViewModel)DataContext).RemoveSkillCommand}"
+                              CommandParameter="{Binding}" />
+                    </StackPanel>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+          <DockPanel Grid.Row="3" Margin="0,16,0,0">
+            <Button DockPanel.Dock="Right"
+                    Classes="primary compact"
+                    Content="添加"
+                    Command="{Binding AddSkillCommand}"
+                    Margin="8,0,0,0" />
+            <TextBox Watermark="新技能名称" Text="{Binding NewSkillName}" />
+          </DockPanel>
+          <TextBlock Grid.Row="4"
+                     Classes="muted"
+                     Margin="0,12,0,0"
+                     TextWrapping="Wrap"
+                     Text="{Binding Message}" />
+        </Grid>
+      </Border>
+    </Grid>
+  </Grid>
+</UserControl>

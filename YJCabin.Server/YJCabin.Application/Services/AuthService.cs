@@ -50,6 +50,37 @@ public sealed class AuthService : IAuthService
         return await IssueAsync(user, cancellationToken);
     }
 
+    public async Task ChangePasswordAsync(Guid userId, ChangePasswordRequest request, CancellationToken cancellationToken = default)
+    {
+        var current = request.CurrentPassword?.Trim() ?? "";
+        var next = request.NewPassword?.Trim() ?? "";
+        if (string.IsNullOrWhiteSpace(current) || string.IsNullOrWhiteSpace(next))
+        {
+            throw new ValidationException("password", "当前密码和新密码都不能为空。");
+        }
+
+        if (next.Length < 8)
+        {
+            throw new ValidationException("newPassword", "新密码至少 8 位。");
+        }
+
+        if (current == next)
+        {
+            throw new ValidationException("newPassword", "新密码不能与当前密码相同。");
+        }
+
+        var user = await _users.GetByIdAsync(userId, cancellationToken)
+                   ?? throw new UnauthorizedAppException();
+        if (!_passwordHasher.Verify(user.PasswordHash, current))
+        {
+            throw new ValidationException("currentPassword", "当前密码不正确。");
+        }
+
+        user.PasswordHash = _passwordHasher.Hash(next);
+        user.UpdatedAt = DateTimeOffset.UtcNow;
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
     private async Task<AuthResponse> IssueAsync(Domain.Entities.User user, CancellationToken cancellationToken)
     {
         var (token, expiresAt) = _jwt.CreateAccessToken(user.Id, user.UserName, user.Role);

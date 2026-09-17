@@ -1,5 +1,3 @@
-import type { ContentStatus } from "../api/types";
-
 export function formatDate(value?: string | null) {
   if (!value) return "";
   const date = new Date(value);
@@ -26,9 +24,3 @@ export function firstPlainLine(markdown?: string, fallback = "个人博客：文
 export function padIndex(index: number) {
   return String(index + 1).padStart(2, "0");
 }
-
-export const statusLabel: Record<ContentStatus, string> = {
-  Draft: "草稿",
-  Published: "已发布",
-  Archived: "已归档"
-};

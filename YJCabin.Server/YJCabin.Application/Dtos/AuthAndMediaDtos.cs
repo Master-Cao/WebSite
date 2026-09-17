@@ -11,6 +11,12 @@ public sealed class RefreshTokenRequest
     public required string RefreshToken { get; init; }
 }
 
+public sealed class ChangePasswordRequest
+{
+    public required string CurrentPassword { get; init; }
+    public required string NewPassword { get; init; }
+}
+
 public sealed class AuthResponse
 {
     public required string AccessToken { get; init; }

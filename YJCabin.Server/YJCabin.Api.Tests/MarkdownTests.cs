@@ -30,4 +30,20 @@ public class MarkdownTests
         Assert.DoesNotContain("<script>", html);
         Assert.Contains("Hello", html);
     }
+
+    [Fact]
+    public void Renderer_KeepsFencedCodeLanguage()
+    {
+        var html = new MarkdownRenderer().ToHtml("```csharp\nConsole.WriteLine(1);\n```");
+        Assert.Contains("language-csharp", html, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Console.WriteLine", html);
+    }
+
+    [Fact]
+    public void Renderer_KeepsPythonLanguageWithWindowsNewlines()
+    {
+        var html = new MarkdownRenderer().ToHtml("```python\r\nimport cao\r\n```");
+        Assert.Contains("language-python", html, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("import cao", html);
+    }
 }

@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/client";
 import type { AboutDto } from "../api/types";
+import { MarkdownHtml } from "../components/MarkdownHtml";
 import { Note } from "../components/Note";
 
 export function AboutPage() {
@@ -28,7 +29,7 @@ export function AboutPage() {
       <article className="glass panel">
         <p className="kicker">简介</p>
         <h1 className="page-title">{query.data.headline}</h1>
-        <div className="markdown" dangerouslySetInnerHTML={{ __html: query.data.bioHtml }} />
+        <MarkdownHtml html={query.data.bioHtml} />
       </article>
       <aside className="glass panel">
         <h2 className="muted" style={{ display: "flex", alignItems: "center", gap: 8 }}>

@@ -11,7 +11,15 @@ public sealed class MarkdownRenderer : IMarkdownRenderer
         .DisableHtml()
         .Build();
 
-    private readonly HtmlSanitizer _sanitizer = new();
+    private readonly HtmlSanitizer _sanitizer = CreateSanitizer();
+
+    private static HtmlSanitizer CreateSanitizer()
+    {
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.AllowedAttributes.Add("class");
+        sanitizer.AllowedClasses.Clear();
+        return sanitizer;
+    }
 
     public string ToHtml(string markdown)
     {
@@ -20,7 +28,8 @@ public sealed class MarkdownRenderer : IMarkdownRenderer
             return string.Empty;
         }
 
-        var html = Markdig.Markdown.ToHtml(markdown, Pipeline);
+        var normalized = markdown.Replace("\r\n", "\n", StringComparison.Ordinal).Replace('\r', '\n');
+        var html = Markdig.Markdown.ToHtml(normalized, Pipeline);
         return _sanitizer.Sanitize(html);
     }
 }

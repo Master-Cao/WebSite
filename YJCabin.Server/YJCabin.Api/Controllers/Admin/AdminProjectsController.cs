@@ -23,8 +23,15 @@ public sealed class AdminProjectsController : ControllerBase
         _projects.ListAsync(query, publishedOnly: false, cancellationToken);
 
     [HttpGet("{slug}")]
-    public Task<ProjectDetailDto> Get(string slug, CancellationToken cancellationToken) =>
-        _projects.GetBySlugAsync(slug, publishedOnly: false, cancellationToken);
+    public async Task<ActionResult<ProjectDetailDto>> Get(string slug, CancellationToken cancellationToken)
+    {
+        if (!SlugHelper.IsUsable(slug))
+        {
+            return NotFound();
+        }
+
+        return await _projects.GetBySlugAsync(slug, publishedOnly: false, cancellationToken);
+    }
 
     [HttpPost]
     public async Task<ActionResult<ProjectDetailDto>> Create(UpsertProjectRequest request, CancellationToken cancellationToken)

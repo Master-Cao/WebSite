@@ -66,31 +66,3 @@ export type AboutDto = {
   skills: string[];
   socialLinks: SocialLink[];
 };
-
-export type ContactMessage = {
-  id: string;
-  name: string;
-  email: string;
-  subject: string;
-  body: string;
-  isRead: boolean;
-  isReplied: boolean;
-  createdAt: string;
-  readAt?: string | null;
-};
-
-export type AuthResponse = {
-  accessToken: string;
-  refreshToken: string;
-  expiresAt: string;
-  userName: string;
-  role: string;
-};
-
-export type MediaAsset = {
-  id: string;
-  fileName: string;
-  url: string;
-  contentType: string;
-  size: number;
-};

@@ -18,4 +18,18 @@ public class SlugHelperTests
     {
         Assert.Throws<ValidationException>(() => SlugHelper.From("   "));
     }
+
+    [Fact]
+    public void FromTitle_UsesTitle()
+    {
+        Assert.Equal("hello-yjcabin", SlugHelper.FromTitle("Hello YJCabin"));
+    }
+
+    [Fact]
+    public void FromTitle_Chinese_FallsBack()
+    {
+        var slug = SlugHelper.FromTitle("玻璃质感后台");
+        Assert.StartsWith("article-", slug);
+        Assert.Equal(16, slug.Length);
+    }
 }

@@ -1,0 +1,116 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:YJCabin.Desktop.ViewModels"
+             xmlns:svc="using:YJCabin.Desktop.Services"
+             xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+             x:Class="YJCabin.Desktop.Views.ProjectsPage"
+             x:Name="PageRoot"
+             x:DataType="vm:ProjectsViewModel">
+  <DockPanel>
+    <Border Classes="glass" DockPanel.Dock="Top" Margin="0,0,0,12">
+        <Border Classes="card-head" BorderThickness="0">
+          <DockPanel>
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8">
+              <Button Classes="primary compact" Content="新建" Command="{Binding NewItemCommand}" />
+              <Button Classes="compact" Content="刷新" Command="{Binding ReloadCommand}" />
+            </StackPanel>
+            <TextBlock Classes="muted" VerticalAlignment="Center" Text="{Binding Message}" TextWrapping="Wrap" />
+          </DockPanel>
+        </Border>
+    </Border>
+
+    <ScrollViewer IsVisible="{Binding !ShowEditor}">
+      <Panel>
+        <TextBlock Classes="muted"
+                   IsVisible="{Binding !HasItems}"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   Text="还没有作品，点击新建开始。" />
+        <ItemsControl ItemsSource="{Binding Items}" IsVisible="{Binding HasItems}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <WrapPanel />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="svc:ProjectSummary">
+              <Button Classes="tile"
+                      Command="{Binding #PageRoot.((vm:ProjectsViewModel)DataContext).OpenItemCommand}"
+                      CommandParameter="{Binding}">
+                <StackPanel>
+                  <TextBlock Classes="kicker" Text="{Binding Status, Converter={StaticResource StatusLabel}}" />
+                  <TextBlock Classes="tile-title" Margin="0,8,0,0" Text="{Binding Title}" />
+                  <TextBlock Classes="tile-summary" MaxHeight="54" Text="{Binding Summary}" />
+                </StackPanel>
+              </Button>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </Panel>
+    </ScrollViewer>
+
+    <Border Classes="glass" Padding="22" IsVisible="{Binding ShowEditor}" ClipToBounds="True">
+      <DockPanel>
+        <StackPanel DockPanel.Dock="Bottom" Spacing="8" Margin="0,16,0,0">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <Button Classes="primary compact" Content="发布" Command="{Binding PublishCommand}" />
+            <Button Classes="compact" Content="保存草稿" Command="{Binding SaveCommand}" />
+            <Button Classes="danger compact" Content="删除" Command="{Binding DeleteCommand}" IsEnabled="{Binding CanDelete}" />
+            <Button Classes="compact" Content="返回" Command="{Binding CloseEditorCommand}" />
+          </StackPanel>
+          <TextBlock Classes="muted" Text="{Binding Message}" TextWrapping="Wrap" />
+        </StackPanel>
+        <ScrollViewer>
+          <StackPanel Spacing="12">
+            <TextBlock Classes="title" Text="{Binding EditorTitle}" />
+            <StackPanel>
+              <TextBlock Classes="label" Text="标题" />
+              <TextBox Text="{Binding Title}" />
+            </StackPanel>
+            <StackPanel>
+              <TextBlock Classes="label" Text="Slug" />
+              <TextBox Watermark="可留空，保存时自动生成" Text="{Binding Slug}" />
+            </StackPanel>
+            <StackPanel>
+              <TextBlock Classes="label" Text="摘要" />
+              <TextBox AcceptsReturn="True" Height="72" Text="{Binding Summary}" />
+            </StackPanel>
+            <StackPanel>
+              <TextBlock Classes="label" Text="描述" />
+              <TextBox AcceptsReturn="True" Height="150" Text="{Binding Description}" />
+            </StackPanel>
+            <StackPanel>
+              <TextBlock Classes="label" Text="标签" />
+              <TextBlock Classes="muted" Margin="0,0,0,8" TextWrapping="Wrap" Text="在设置里添加标签后，这里点选即可。" />
+              <ItemsControl ItemsSource="{Binding TagChoices}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <WrapPanel />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:TagChoice">
+                    <ToggleButton Classes="tag-chip"
+                                  Margin="0,0,8,8"
+                                  IsChecked="{Binding IsSelected}"
+                                  Content="{Binding Name}" />
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+            <StackPanel>
+              <TextBlock Classes="label" Text="状态" />
+              <ComboBox ItemsSource="{Binding StatusOptions}" SelectedItem="{Binding Status}">
+                <ComboBox.ItemTemplate>
+                  <DataTemplate x:DataType="sys:String">
+                    <TextBlock Text="{Binding Converter={StaticResource StatusLabel}}" />
+                  </DataTemplate>
+                </ComboBox.ItemTemplate>
+              </ComboBox>
+            </StackPanel>
+          </StackPanel>
+        </ScrollViewer>
+      </DockPanel>
+    </Border>
+  </DockPanel>
+</UserControl>

@@ -18,7 +18,7 @@ public sealed class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbConte
 
         var options = new DbContextOptionsBuilder<AppDbContext>();
         options.UseNpgsql(configuration.GetConnectionString("Default")
-                          ?? "Host=localhost;Port=5432;Database=yjcabin;Username=yjcabin;Password=yjcabin");
+                          ?? "Host=localhost;Port=5432;Database=website;Username=postgres;Password=123456");
         return new AppDbContext(options.Options);
     }
 }

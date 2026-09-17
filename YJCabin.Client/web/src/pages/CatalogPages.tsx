@@ -14,7 +14,6 @@ export function CatalogPage({ kind }: { kind: Kind }) {
   const tag = params.get("tag") ?? "";
   const q = params.get("q") ?? "";
   const endpoint = kind === "works" ? "/api/projects" : "/api/articles";
-  const path = kind === "works" ? "/works" : "/articles";
   const title = kind === "works" ? "作品" : "文章";
   const query = useQuery({
     queryKey: [kind, tag, q],
@@ -75,9 +74,9 @@ export function CatalogPage({ kind }: { kind: Kind }) {
           <ul className="row-list catalog-list">
             {query.data?.items.map((item, index) =>
               kind === "works" ? (
-                <WorkRow key={item.id} item={item as ProjectSummary} index={index} href={`${path}/${item.slug}`} />
+                <WorkRow key={item.id} item={item as ProjectSummary} index={index} />
               ) : (
-                <ArticleRow key={item.id} item={item as ArticleSummary} href={`${path}/${item.slug}`} />
+                <ArticleRow key={item.id} item={item as ArticleSummary} />
               )
             )}
           </ul>

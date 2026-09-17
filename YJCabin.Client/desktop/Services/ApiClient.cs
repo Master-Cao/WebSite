@@ -47,6 +47,15 @@ public sealed class ApiClient
     public Task DeleteProjectAsync(string slug, CancellationToken cancellationToken = default) =>
         SendAsync($"/api/admin/projects/{slug}", HttpMethod.Delete, null, true, cancellationToken);
 
+    public Task<List<TagDto>> ListTagsAsync(CancellationToken cancellationToken = default) =>
+        GetAsync<List<TagDto>>("/api/tags", false, cancellationToken);
+
+    public Task<TagDto> CreateTagAsync(string name, CancellationToken cancellationToken = default) =>
+        PostAsync<TagDto>("/api/admin/tags", new { name }, true, cancellationToken);
+
+    public Task DeleteTagAsync(Guid id, CancellationToken cancellationToken = default) =>
+        SendAsync($"/api/admin/tags/{id}", HttpMethod.Delete, null, true, cancellationToken);
+
     public Task<PagedResult<ArticleSummary>> ListArticlesAsync(CancellationToken cancellationToken = default) =>
         GetAsync<PagedResult<ArticleSummary>>("/api/admin/articles", true, cancellationToken);
 
@@ -72,6 +81,9 @@ public sealed class ApiClient
 
     public Task PatchMessageAsync(Guid id, bool? isRead, bool? isReplied, CancellationToken cancellationToken = default) =>
         SendAsync($"/api/admin/contact-messages/{id}", HttpMethod.Patch, new { isRead, isReplied }, true, cancellationToken);
+
+    public Task ChangePasswordAsync(string currentPassword, string newPassword, CancellationToken cancellationToken = default) =>
+        SendAsync("/api/auth/password", HttpMethod.Post, new { currentPassword, newPassword }, true, cancellationToken);
 
     private async Task<T> GetAsync<T>(string path, bool auth, CancellationToken cancellationToken)
     {
@@ -115,10 +127,32 @@ public sealed class ApiClient
         if (!response.IsSuccessStatusCode)
         {
             var text = await response.Content.ReadAsStringAsync(cancellationToken);
-            throw new InvalidOperationException(string.IsNullOrWhiteSpace(text) ? response.ReasonPhrase : text);
+            throw new InvalidOperationException(ReadError(text, response.ReasonPhrase));
         }
 
         return response;
+    }
+
+    private static string ReadError(string text, string? fallback)
+    {
+        if (!string.IsNullOrWhiteSpace(text))
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(text);
+                if (doc.RootElement.TryGetProperty("message", out var message) &&
+                    message.ValueKind == JsonValueKind.String &&
+                    !string.IsNullOrWhiteSpace(message.GetString()))
+                {
+                    return message.GetString()!;
+                }
+            }
+            catch (JsonException)
+            {
+            }
+        }
+
+        return string.IsNullOrWhiteSpace(text) ? fallback ?? "请求失败" : text;
     }
 }
 
@@ -143,6 +177,7 @@ public class ProjectSummary
     public string Slug { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public string Summary { get; set; } = string.Empty;
+    public string? CoverUrl { get; set; }
     public string Status { get; set; } = "Draft";
     public List<TagDto> Tags { get; set; } = [];
 }
@@ -150,7 +185,6 @@ public class ProjectSummary
 public sealed class ProjectDetail : ProjectSummary
 {
     public string Description { get; set; } = string.Empty;
-    public string? CoverUrl { get; set; }
     public string? RepoUrl { get; set; }
     public string? LiveUrl { get; set; }
     public int SortOrder { get; set; }
@@ -177,6 +211,7 @@ public class ArticleSummary
     public string Slug { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public string Summary { get; set; } = string.Empty;
+    public string? CoverUrl { get; set; }
     public string Status { get; set; } = "Draft";
     public List<TagDto> Tags { get; set; } = [];
 }
@@ -184,7 +219,6 @@ public class ArticleSummary
 public sealed class ArticleDetail : ArticleSummary
 {
     public string Markdown { get; set; } = string.Empty;
-    public string? CoverUrl { get; set; }
 }
 
 public sealed class UpsertArticleRequest

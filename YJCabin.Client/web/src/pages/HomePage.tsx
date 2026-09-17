@@ -27,8 +27,8 @@ export function HomePage() {
       <section className="glass hero home-hero">
         <div>
           <p className="kicker">博客</p>
-          <h1 className="display">{about.data?.headline ?? "YJCabin"}</h1>
-          <p className="lede">{firstPlainLine(about.data?.bioMarkdown)}</p>
+          <h1 className="display">{about.data?.headline ?? (about.isFetched ? "YJCabin" : "\u00a0")}</h1>
+          <p className="lede">{about.data ? firstPlainLine(about.data.bioMarkdown) : "\u00a0"}</p>
           <div className="actions">
             <Link to="/articles" className={btnPrimary}>
               阅读文章
@@ -61,7 +61,7 @@ export function HomePage() {
         {!articles.isLoading && !articles.data?.items.length && <Note>还没有发布文章。</Note>}
         <ul className="row-list">
           {articles.data?.items.map((item) => (
-            <ArticleRow key={item.id} item={item} href={`/articles/${item.slug}`} />
+            <ArticleRow key={item.id} item={item} />
           ))}
         </ul>
       </section>
@@ -78,7 +78,7 @@ export function HomePage() {
         {!projects.isLoading && !projects.data?.items.length && <Note>还没有发布作品。</Note>}
         <ul className="row-list">
           {projects.data?.items.map((item, index) => (
-            <WorkRow key={item.id} item={item} index={index} href={`/works/${item.slug}`} />
+            <WorkRow key={item.id} item={item} index={index} />
           ))}
         </ul>
       </section>

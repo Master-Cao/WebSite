@@ -8,52 +8,96 @@ namespace YJCabin.Desktop.ViewModels;
 public partial class ProjectsViewModel : ViewModelBase
 {
     private readonly ApiClient _api;
+    private readonly BusyController _busy;
+
     [ObservableProperty] private ObservableCollection<ProjectSummary> _items = [];
     [ObservableProperty] private ProjectSummary? _selected;
+    [ObservableProperty] private bool _isCreating;
     [ObservableProperty] private string _slug = "";
     [ObservableProperty] private string _title = "";
     [ObservableProperty] private string _summary = "";
     [ObservableProperty] private string _description = "";
-    [ObservableProperty] private string _tagsText = "";
+    [ObservableProperty] private ObservableCollection<TagChoice> _tagChoices = [];
     [ObservableProperty] private string _status = "Draft";
     [ObservableProperty] private string _message = "";
 
-    public ProjectsViewModel(ApiClient api)
+    public IReadOnlyList<string> StatusOptions { get; } = ["Draft", "Published", "Archived"];
+    public bool HasItems => Items.Count > 0;
+    public bool ShowEditor => IsCreating || Selected is not null;
+    public bool CanDelete => Selected is not null;
+    public string EditorTitle => IsCreating ? "新建作品" : "编辑作品";
+
+    public ProjectsViewModel(ApiClient api, BusyController busy)
     {
         _api = api;
+        _busy = busy;
     }
+
+    partial void OnItemsChanged(ObservableCollection<ProjectSummary> value) =>
+        OnPropertyChanged(nameof(HasItems));
 
     partial void OnSelectedChanged(ProjectSummary? value)
     {
+        NotifyEditor();
         if (value is null)
         {
             return;
         }
 
-        _ = LoadDetailAsync(value.Slug);
+        IsCreating = false;
+        _ = string.IsNullOrWhiteSpace(value.Slug) ? Task.CompletedTask : LoadDetailAsync(value.Slug);
     }
 
+    partial void OnIsCreatingChanged(bool value) => NotifyEditor();
+
     [RelayCommand]
-    public async Task ReloadAsync()
+    public Task ReloadAsync() => _busy.RunAsync("正在加载作品…", LoadListAsync);
+
+    private async Task LoadListAsync()
     {
         var result = await _api.ListProjectsAsync();
+        var slug = Selected?.Slug;
         Items = new ObservableCollection<ProjectSummary>(result.Items);
+        Selected = slug is null ? null : Items.FirstOrDefault(item => item.Slug == slug);
+        if (Selected is null && !IsCreating)
+        {
+            Message = Items.Count == 0 ? "还没有作品，点击新建开始。" : "";
+        }
     }
 
     [RelayCommand]
-    private void NewItem()
+    private Task NewItem() => _busy.RunAsync("正在准备编辑器…", async () =>
     {
+        IsCreating = true;
         Selected = null;
-        Slug = Title = Summary = Description = TagsText = "";
+        Slug = Title = Summary = Description = "";
         Status = "Draft";
-    }
+        Message = "";
+        TagChoices = await TagCatalog.LoadAsync(_api, []);
+    });
 
     [RelayCommand]
-    private async Task SaveAsync()
+    private Task SaveAsync() => _busy.RunAsync("正在保存作品…", () => SaveCoreAsync(false));
+
+    [RelayCommand]
+    private Task PublishAsync() => _busy.RunAsync("正在发布作品…", () => SaveCoreAsync(true));
+
+    private async Task SaveCoreAsync(bool publish)
     {
+        if (string.IsNullOrWhiteSpace(Title))
+        {
+            Message = "请填写标题后再保存。";
+            return;
+        }
+
         try
         {
-            var currentSlug = Selected?.Slug;
+            if (publish)
+            {
+                Status = "Published";
+            }
+
+            var currentSlug = IsCreating ? null : Selected?.Slug;
             var saved = await _api.SaveProjectAsync(currentSlug, new UpsertProjectRequest
             {
                 Slug = string.IsNullOrWhiteSpace(Slug) ? null : Slug,
@@ -61,10 +105,19 @@ public partial class ProjectsViewModel : ViewModelBase
                 Summary = Summary,
                 Description = Description,
                 Status = Status,
-                Tags = TagsText.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList()
+                Tags = TagCatalog.SelectedNames(TagChoices)
             });
-            Message = $"已保存 {saved.Slug}";
-            await ReloadAsync();
+            IsCreating = false;
+            if (publish || saved.Status == "Published")
+            {
+                await ReturnToListAsync($"已发布「{saved.Title}」。");
+                return;
+            }
+
+            Message = "已保存草稿。";
+            var result = await _api.ListProjectsAsync();
+            Items = new ObservableCollection<ProjectSummary>(result.Items);
+            Selected = Items.FirstOrDefault(item => item.Slug == saved.Slug);
         }
         catch (Exception ex)
         {
@@ -73,7 +126,9 @@ public partial class ProjectsViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private async Task DeleteAsync()
+    private Task DeleteAsync() => _busy.RunAsync("正在删除作品…", DeleteCoreAsync);
+
+    private async Task DeleteCoreAsync()
     {
         if (Selected is null)
         {
@@ -81,11 +136,51 @@ public partial class ProjectsViewModel : ViewModelBase
         }
 
         await _api.DeleteProjectAsync(Selected.Slug);
-        NewItem();
-        await ReloadAsync();
+        IsCreating = false;
+        Selected = null;
+        Slug = Title = Summary = Description = "";
+        TagChoices = [];
+        Status = "Draft";
+        Message = "已删除";
+        await LoadListAsync();
     }
 
-    private async Task LoadDetailAsync(string slug)
+    private async Task ReturnToListAsync(string message)
+    {
+        IsCreating = false;
+        Selected = null;
+        var result = await _api.ListProjectsAsync();
+        Items = new ObservableCollection<ProjectSummary>(result.Items);
+        Message = Items.Count == 0 ? "还没有作品，点击新建开始。" : message;
+    }
+
+    [RelayCommand]
+    private void OpenItem(ProjectSummary? item)
+    {
+        if (item is null)
+        {
+            return;
+        }
+
+        Selected = item;
+    }
+
+    [RelayCommand]
+    private void CloseEditor()
+    {
+        IsCreating = false;
+        Selected = null;
+        Message = "";
+    }
+
+    private void NotifyEditor()
+    {
+        OnPropertyChanged(nameof(ShowEditor));
+        OnPropertyChanged(nameof(CanDelete));
+        OnPropertyChanged(nameof(EditorTitle));
+    }
+
+    private Task LoadDetailAsync(string slug) => _busy.RunAsync("正在打开作品…", async () =>
     {
         var detail = await _api.GetProjectAsync(slug);
         Slug = detail.Slug;
@@ -93,6 +188,6 @@ public partial class ProjectsViewModel : ViewModelBase
         Summary = detail.Summary;
         Description = detail.Description;
         Status = detail.Status;
-        TagsText = string.Join(", ", detail.Tags.Select(x => x.Name));
-    }
+        TagChoices = await TagCatalog.LoadAsync(_api, detail.Tags.Select(x => x.Name));
+    });
 }

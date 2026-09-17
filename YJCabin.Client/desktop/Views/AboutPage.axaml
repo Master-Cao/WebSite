@@ -1,0 +1,79 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:YJCabin.Desktop.ViewModels"
+             x:Class="YJCabin.Desktop.Views.AboutPage"
+             x:DataType="vm:AboutViewModel">
+  <Grid RowDefinitions="Auto,*">
+    <Border Classes="glass" Padding="16,12" Margin="0,0,0,12">
+      <DockPanel>
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8">
+          <Button Classes="compact" Content="刷新" Command="{Binding ReloadCommand}" />
+          <Button Classes="primary compact" Content="保存" Command="{Binding SaveCommand}" />
+        </StackPanel>
+        <StackPanel VerticalAlignment="Center" Spacing="2">
+          <TextBlock Classes="kicker" Text="关于我" />
+          <TextBlock Classes="muted" Text="公开站左侧栏会读取这里" />
+        </StackPanel>
+      </DockPanel>
+    </Border>
+
+    <Grid Grid.Row="1" ColumnDefinitions="*,14,*">
+      <Border Classes="glass" Padding="22">
+        <Grid RowDefinitions="Auto,Auto,*,Auto">
+          <TextBlock Classes="kicker" Text="简介" />
+          <StackPanel Grid.Row="1" Margin="0,14,0,0">
+            <TextBlock Classes="label" Text="标题" />
+            <TextBox Text="{Binding Headline}" />
+          </StackPanel>
+          <Grid Grid.Row="2" Margin="0,14,0,0" RowDefinitions="Auto,*">
+            <TextBlock Classes="label" Text="简介 Markdown" />
+            <TextBox Grid.Row="1"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     VerticalAlignment="Stretch"
+                     MinHeight="220"
+                     Text="{Binding BioMarkdown}" />
+          </Grid>
+          <TextBlock Grid.Row="3"
+                     Classes="muted"
+                     Margin="0,12,0,0"
+                     Text="{Binding Message}" />
+        </Grid>
+      </Border>
+
+      <Border Grid.Column="2" Classes="glass" Padding="22">
+        <Grid RowDefinitions="Auto,Auto,*,Auto">
+          <TextBlock Classes="kicker" Text="联系方式" />
+          <TextBlock Grid.Row="1"
+                     Classes="muted"
+                     Margin="0,8,0,0"
+                     TextWrapping="Wrap"
+                     Text="技能芯片请到设置中维护。" />
+          <Grid Grid.Row="2" Margin="0,18,0,0" ColumnDefinitions="*,12,*" RowDefinitions="Auto,14,Auto">
+            <StackPanel Grid.Row="0" Grid.Column="0">
+              <TextBlock Classes="label" Text="QQ" />
+              <TextBox Watermark="QQ 号码" Text="{Binding Qq}" />
+            </StackPanel>
+            <StackPanel Grid.Row="0" Grid.Column="2">
+              <TextBlock Classes="label" Text="邮箱" />
+              <TextBox Watermark="name@example.com" Text="{Binding Email}" />
+            </StackPanel>
+            <StackPanel Grid.Row="2" Grid.Column="0">
+              <TextBlock Classes="label" Text="微信" />
+              <TextBox Watermark="微信号" Text="{Binding Wechat}" />
+            </StackPanel>
+            <StackPanel Grid.Row="2" Grid.Column="2">
+              <TextBlock Classes="label" Text="GitHub" />
+              <TextBox Watermark="https://github.com/你的账号" Text="{Binding Github}" />
+            </StackPanel>
+          </Grid>
+          <TextBlock Grid.Row="3"
+                     Classes="muted"
+                     Margin="0,16,0,0"
+                     TextWrapping="Wrap"
+                     Text="这些联系方式会出现在公开站左侧栏，点击后弹出卡片。" />
+        </Grid>
+      </Border>
+    </Grid>
+  </Grid>
+</UserControl>

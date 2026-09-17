@@ -1,11 +1,11 @@
 ---
-title: Hello, YJCabin
+title: 修改文章
 summary: 站点第一篇文章：为什么用混合存储，以及 Web / 桌面如何共用 API。
 tags:
-  - Architecture
-  - C#
+- Architecture
+- C#
+publishedAt: 2026-09-17T04:40:28.6078594Z
 draft: false
-publishedAt: 2026-09-16T00:00:00Z
 ---
 
 站点采用混合内容模型：
