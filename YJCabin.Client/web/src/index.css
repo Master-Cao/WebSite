@@ -718,10 +718,12 @@ img { max-width: 100%; }
 .rail-skills {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 0.35rem;
   margin: 0.7rem 0 0;
   padding: 0;
   list-style: none;
+  text-align: center;
 }
 
 .rail-skills li {
@@ -791,6 +793,7 @@ img { max-width: 100%; }
   justify-content: center;
   min-height: 2.1rem;
   padding-inline: 0.7rem;
+  white-space: nowrap;
 }
 
 .rail-stats {
@@ -828,97 +831,27 @@ img { max-width: 100%; }
   font-size: 0.72rem;
 }
 
-.rail-nook {
-  position: relative;
-  height: 148px;
-  overflow: hidden;
-  border-radius: 1rem;
-  background:
-    radial-gradient(120px 70px at 70% 80%, rgb(126 207 255 / 0.16), transparent 70%),
-    linear-gradient(180deg, rgb(255 255 255 / 0.04), rgb(8 20 36 / 0.2));
+.beian {
+  display: grid;
+  gap: 0.28rem;
+  margin: 0.45rem 0 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.55;
+  text-align: center;
 }
 
-.rail-nook-glow {
-  position: absolute;
-  left: 18%;
-  bottom: 18%;
-  width: 72px;
-  height: 18px;
-  border-radius: 999px;
-  background: rgb(126 207 255 / 0.18);
-  filter: blur(6px);
-  animation: rail-nook-breathe 3.4s ease-in-out infinite;
+.beian p {
+  margin: 0;
 }
 
-.rail-nook-cat {
-  position: absolute;
-  left: 12%;
-  bottom: 10%;
-  width: 78px;
-  height: 78px;
-  object-fit: contain;
-  animation: rail-nook-sit 3.4s ease-in-out infinite;
-  filter: drop-shadow(0 8px 12px rgb(6 16 28 / 0.35));
+.beian a {
+  color: var(--accent);
+  text-underline-offset: 3px;
 }
 
-.rail-nook-bird {
-  position: absolute;
-  left: 58%;
-  top: 18%;
-  width: 42px;
-  height: 42px;
-  object-fit: contain;
-  animation: rail-nook-fly 5.6s ease-in-out infinite;
-}
-
-.rail-nook-paw {
-  position: absolute;
-  width: 22px;
-  height: 22px;
-  object-fit: contain;
-  opacity: 0;
-}
-
-.rail-nook-paw-a {
-  right: 28%;
-  bottom: 18%;
-  transform: rotate(-18deg);
-  animation: rail-nook-print 3.6s ease-in-out infinite;
-}
-
-.rail-nook-paw-b {
-  right: 16%;
-  bottom: 28%;
-  transform: rotate(12deg);
-  animation: rail-nook-print 3.6s ease-in-out infinite 0.45s;
-}
-
-.rail-nook-paw-c {
-  right: 8%;
-  bottom: 16%;
-  transform: rotate(-8deg);
-  animation: rail-nook-print 3.6s ease-in-out infinite 0.9s;
-}
-
-@keyframes rail-nook-sit {
-  0%, 100% { transform: translateY(0) rotate(-2deg); }
-  50% { transform: translateY(-6px) rotate(2deg); }
-}
-
-@keyframes rail-nook-fly {
-  0% { left: 58%; top: 18%; transform: translateY(0) rotate(-8deg); }
-  50% { left: 72%; top: 8%; transform: translateY(-10px) rotate(10deg); }
-  100% { left: 58%; top: 18%; transform: translateY(0) rotate(-8deg); }
-}
-
-@keyframes rail-nook-print {
-  0%, 18%, 100% { opacity: 0; transform: translateY(6px) scale(0.86); }
-  32%, 58% { opacity: 0.8; transform: translateY(0) scale(1); }
-}
-
-@keyframes rail-nook-breathe {
-  0%, 100% { opacity: 0.45; transform: scaleX(1); }
-  50% { opacity: 0.9; transform: scaleX(1.12); }
+.beian a:hover {
+  text-decoration: underline;
 }
 
 .rail-message-form {
@@ -949,7 +882,20 @@ img { max-width: 100%; }
   cursor: wait;
 }
 
+.timeline-body {
+  min-height: 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.timeline-body::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 .timeline-year { margin-top: 0.85rem; }
+.timeline-year:first-child { margin-top: 0.35rem; }
 .timeline-year h3 {
   margin: 0 0 0.35rem;
   color: var(--accent);
@@ -1038,12 +984,52 @@ img { max-width: 100%; }
 
 .search-row {
   display: flex;
+  align-items: stretch;
   gap: 0.7rem;
   max-width: none;
   margin-top: 1.2rem;
 }
 
-.site-main { flex: 1; padding: 1.25rem 0 2rem; }
+.search-row .control {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+}
+
+.search-row .btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.site-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 1.25rem 0 2rem;
+}
+.site-main > .wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.site-main > .wrap.home-board,
+.site-main > .wrap.about-grid {
+  display: grid;
+  align-content: stretch;
+}
+.site-main > .wrap:not(.home-board):not(.about-grid) > .glass {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+.about-grid > .glass,
+.home-articles,
+.home-works {
+  min-height: 0;
+  overflow: auto;
+}
 .site-main .glass {
   background: #102038;
   backdrop-filter: none;
@@ -1373,6 +1359,7 @@ img { max-width: 100%; }
   .split { grid-template-columns: 0.9fr 1.1fr; }
   .home-board {
     grid-template-columns: 1.2fr 0.9fr;
+    grid-template-rows: auto minmax(0, 1fr);
     grid-template-areas:
       "hero hero"
       "articles works";
@@ -1393,10 +1380,13 @@ img { max-width: 100%; }
   .site {
     display: grid;
     grid-template-columns: 250px minmax(0, 1fr) 250px;
-    grid-template-rows: auto 1fr auto;
-    gap: 0.85rem;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: 1.5rem 1.00rem;
     padding: 0.75rem 0.9rem 1rem;
-    align-items: start;
+    align-items: stretch;
+    height: 100dvh;
+    min-height: 100dvh;
+    overflow: hidden;
   }
   .site-header {
     grid-column: 1 / -1;
@@ -1408,26 +1398,31 @@ img { max-width: 100%; }
     display: flex;
     flex-direction: column;
     gap: 0;
-    position: sticky;
-    top: 0.75rem;
+    height: 100%;
+    min-height: 0;
     padding: 1rem 0.9rem 1.1rem;
-    max-height: calc(100dvh - 1.5rem);
-    min-height: calc(100dvh - 8.5rem);
     overflow: auto;
   }
   .site-rail-left { grid-column: 1; grid-row: 2; overflow: hidden; }
-  .site-rail-left .rail-nook-block {
+  .site-rail-left .rail-legal {
     flex: 1 1 auto;
     min-height: 0;
     display: flex;
     flex-direction: column;
+    justify-content: flex-end;
   }
-  .site-rail-left .rail-nook {
-    flex: 1 1 auto;
-    min-height: 148px;
-    height: auto;
+  .site-main {
+    grid-column: 2;
+    grid-row: 2;
+    padding: 0;
+    min-height: 0;
+    height: 100%;
+    overflow: hidden;
   }
-  .site-main { grid-column: 2; grid-row: 2; padding: 0; }
+  .site-main > .wrap {
+    width: 100%;
+    height: 100%;
+  }
   .site-rail-right {
     grid-column: 3;
     grid-row: 2;
@@ -1435,6 +1430,14 @@ img { max-width: 100%; }
   }
   .site-rail-right .rail-message { flex: 0 0 auto; }
   .site-rail-right .rail-timeline {
+    flex: 0 0 17.5rem;
+    height: 17.5rem;
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .site-rail-right .timeline-body {
     flex: 1 1 auto;
     min-height: 0;
     overflow: auto;

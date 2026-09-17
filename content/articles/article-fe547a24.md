@@ -3,7 +3,8 @@ title: 测试草稿
 summary: 啊手动阀手动阀手动阀
 tags:
 - C#
-publishedAt: 2026-09-17T07:47:17.4783063Z
+- 机器视觉
+publishedAt: 2026-09-17T08:44:41.3194471Z
 draft: false
 ---
 

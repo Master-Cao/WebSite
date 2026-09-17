@@ -2,9 +2,10 @@
 title: 修改文章
 summary: 站点第一篇文章：为什么用混合存储，以及 Web / 桌面如何共用 API。
 tags:
-- Architecture
 - C#
-publishedAt: 2026-09-17T04:40:28.6078594Z
+- VLA
+- YOLO
+publishedAt: 2026-09-17T08:44:32.9510333Z
 draft: false
 ---
 

@@ -10,19 +10,6 @@ export function Critters() {
   );
 }
 
-export function RailNook() {
-  return (
-    <div className="rail-nook" aria-hidden="true">
-      <span className="rail-nook-glow" />
-      <img src="/yjcabin-paw.png" alt="" className="rail-nook-paw rail-nook-paw-a" />
-      <img src="/yjcabin-paw.png" alt="" className="rail-nook-paw rail-nook-paw-b" />
-      <img src="/yjcabin-paw.png" alt="" className="rail-nook-paw rail-nook-paw-c" />
-      <img src="/yjcabin-bird.png" alt="" className="rail-nook-bird" />
-      <img src="/yjcabin-cat.png" alt="" className="rail-nook-cat" />
-    </div>
-  );
-}
-
 export function PetStage() {
   return (
     <div className="pet-stage" aria-hidden="true">

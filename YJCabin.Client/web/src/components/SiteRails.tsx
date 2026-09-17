@@ -7,8 +7,8 @@ import type { AboutDto, ArticleSummary, PagedResult, ProjectSummary } from "../a
 import { resolveContact, type ContactKind } from "../lib/contacts";
 import { pickSlug } from "../lib/content";
 import { formatShortDate } from "../lib/format";
+import { BeianNotice } from "./BeianNotice";
 import { ReaderLink } from "./ContentRows";
-import { RailNook } from "./Animals";
 import { ContactCardDialog } from "./ContactCardDialog";
 
 type TimelineEntry = {
@@ -139,8 +139,9 @@ export function ProfileSearchRail() {
         </form>
       </section>
 
-      <section className="rail-block rail-nook-block">
-        <RailNook />
+      <section className="rail-block rail-legal">
+        <p className="kicker">声明</p>
+        <BeianNotice />
       </section>
     </>
   );
@@ -195,27 +196,29 @@ export function TimelineRail() {
     <section className="rail-block rail-timeline">
       <p className="kicker">时间线</p>
       <p className="muted rail-lead">最近发布的文章与作品。</p>
-      {(articles.isLoading || projects.isLoading) && <p className="muted rail-empty">载入中…</p>}
-      {!articles.isLoading && !projects.isLoading && !entries.length && <p className="muted rail-empty">还没有动态。</p>}
-      {[...groups.entries()].map(([year, items]) => (
-        <div key={year} className="timeline-year">
-          <h3>{year}</h3>
-          <ol className="timeline">
-            {items.map((item) => (
-              <li key={item.id}>
-                <span className="timeline-stem" aria-hidden="true" />
-                <ReaderLink to={item.href} className="timeline-card">
-                  <span className="timeline-meta">
-                    <time dateTime={item.at ?? undefined}>{formatShortDate(item.at) || "无日期"}</time>
-                    <span>{item.kind === "article" ? "文章" : "作品"}</span>
-                  </span>
-                  <strong>{item.title}</strong>
-                </ReaderLink>
-              </li>
-            ))}
-          </ol>
-        </div>
-      ))}
+      <div className="timeline-body">
+        {(articles.isLoading || projects.isLoading) && <p className="muted rail-empty">载入中…</p>}
+        {!articles.isLoading && !projects.isLoading && !entries.length && <p className="muted rail-empty">还没有动态。</p>}
+        {[...groups.entries()].map(([year, items]) => (
+          <div key={year} className="timeline-year">
+            <h3>{year}</h3>
+            <ol className="timeline">
+              {items.map((item) => (
+                <li key={item.id}>
+                  <span className="timeline-stem" aria-hidden="true" />
+                  <ReaderLink to={item.href} className="timeline-card">
+                    <span className="timeline-meta">
+                      <time dateTime={item.at ?? undefined}>{formatShortDate(item.at) || "无日期"}</time>
+                      <span>{item.kind === "article" ? "文章" : "作品"}</span>
+                    </span>
+                    <strong>{item.title}</strong>
+                  </ReaderLink>
+                </li>
+              ))}
+            </ol>
+          </div>
+        ))}
+      </div>
       <nav className="rail-links">
         <NavLink to="/archive">查看归档</NavLink>
       </nav>
@@ -248,7 +251,7 @@ export function MessageRail() {
       setStatus("ok");
     } catch (err) {
       setStatus("err");
-      setError(err instanceof Error ? err.message : "发送失败，请稍后再试。");
+      setError(err instanceof Error ? err.message : "留言失败，请稍后再试。");
     }
   };
 
@@ -287,7 +290,7 @@ export function MessageRail() {
           placeholder="想说的话"
         />
         <button type="submit" className="btn btn-primary" disabled={status === "sending"}>
-          {status === "sending" ? "发送中…" : "发送"}
+          {status === "sending" ? "提交中…" : "留言"}
         </button>
         {status === "ok" && <p className="muted rail-empty">已收到，谢谢。</p>}
         {status === "err" && <p className="danger rail-empty">{error}</p>}

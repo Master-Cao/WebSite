@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { List, X } from "@phosphor-icons/react";
 import { Critters } from "../components/Animals";
+import { ICP_HREF, ICP_NO } from "../components/BeianNotice";
 import { BrandLogo } from "../components/BrandLogo";
 import { LoadingOverlay } from "../components/LoadingOverlay";
 import { ProfileSearchRail, MessageRail, TimelineRail } from "../components/SiteRails";
@@ -84,6 +85,9 @@ export function PublicLayout() {
                 <BrandLogo compact />
               </div>
               <nav className="footer-links">
+                <a className="accent" href={ICP_HREF} target="_blank" rel="noreferrer">
+                  {ICP_NO}
+                </a>
                 <Link to="/archive" className="accent">
                   归档
                 </Link>
