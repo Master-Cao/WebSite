@@ -104,7 +104,7 @@ public sealed class ProjectService : IProjectService
     {
         if (string.IsNullOrWhiteSpace(request.Title) || string.IsNullOrWhiteSpace(request.Summary))
         {
-            throw new ValidationException("title", "Title and summary are required.");
+            throw new ValidationException("title", "标题和摘要不能为空。");
         }
 
         project.Slug = slug;

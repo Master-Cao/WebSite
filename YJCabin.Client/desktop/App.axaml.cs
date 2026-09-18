@@ -15,7 +15,7 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            var api = new ApiClient("http://localhost:5178");
+            var api = new ApiClient(AppSettings.ResolveApiBaseUrl());
             desktop.MainWindow = new MainWindow
             {
                 DataContext = new MainWindowViewModel(api)

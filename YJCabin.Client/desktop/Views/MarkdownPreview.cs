@@ -1,3 +1,4 @@
+using System.Net.Http;
 using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
@@ -10,6 +11,8 @@ using ColorDocument.Avalonia.DocumentElements;
 using Markdown.Avalonia;
 using Markdown.Avalonia.Parsers;
 using Markdown.Avalonia.Plugins;
+using Markdown.Avalonia.Utils;
+using YJCabin.Desktop.Services;
 
 namespace YJCabin.Desktop.Views;
 
@@ -17,9 +20,147 @@ public sealed class MarkdownPreview : MarkdownScrollViewer
 {
     public MarkdownPreview()
     {
-        var plugins = new MdAvPlugins();
+        var plugins = new MdAvPlugins
+        {
+            PathResolver = new SiteImagePathResolver()
+        };
         plugins.Plugins.Add(new ReaderCodePlugin());
         Plugins = plugins;
+        Classes.Add("md-preview");
+    }
+}
+
+file sealed class SiteImagePathResolver : IPathResolver
+{
+    private static readonly HttpClient Http = CreateClient();
+
+    public string? AssetPathRoot { private get; set; }
+
+    public IEnumerable<string>? CallerAssemblyNames { private get; set; }
+
+    public async Task<Stream?> ResolveImageResource(string relativeOrAbsolutePath)
+    {
+        if (LocalMediaStore.TryOpen(relativeOrAbsolutePath, out var local) && local is not null)
+        {
+            return local;
+        }
+
+        if (MediaImageCache.TryOpen(relativeOrAbsolutePath, out var cached) && cached is not null)
+        {
+            return cached;
+        }
+
+        foreach (var url in Candidates(relativeOrAbsolutePath))
+        {
+            if (MediaImageCache.TryOpen(url.AbsolutePath, out cached) && cached is not null)
+            {
+                return cached;
+            }
+
+            try
+            {
+                using var response = await Http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+                if (!response.IsSuccessStatusCode)
+                {
+                    continue;
+                }
+
+                var bytes = await response.Content.ReadAsByteArrayAsync();
+                if (!LooksLikeImage(bytes))
+                {
+                    continue;
+                }
+
+                MediaImageCache.Store(url.AbsolutePath, bytes);
+                return new MemoryStream(bytes, writable: false);
+            }
+            catch
+            {
+                // try the next candidate
+            }
+        }
+
+        return null;
+    }
+
+    private IEnumerable<Uri> Candidates(string path)
+    {
+        if (Uri.TryCreate(path, UriKind.Absolute, out var absolute) &&
+            absolute.Scheme is "http" or "https")
+        {
+            yield return absolute;
+            foreach (var alt in Alternates(absolute))
+            {
+                yield return alt;
+            }
+
+            yield break;
+        }
+
+        if (!TryCreateBase(out var root))
+        {
+            yield break;
+        }
+
+        var relative = path.TrimStart('/');
+        yield return new Uri(root, relative);
+        foreach (var alt in Alternates(new Uri(root, relative)))
+        {
+            yield return alt;
+        }
+
+        var file = Path.GetFileName(path.TrimEnd('/'));
+        if (!string.IsNullOrEmpty(file))
+        {
+            yield return new Uri(root, "api/uploads/" + file);
+            yield return new Uri(root, "uploads/" + file);
+        }
+    }
+
+    private static IEnumerable<Uri> Alternates(Uri url)
+    {
+        var text = url.ToString();
+        if (text.Contains("/api/uploads/", StringComparison.OrdinalIgnoreCase))
+        {
+            yield return new Uri(text.Replace("/api/uploads/", "/uploads/", StringComparison.OrdinalIgnoreCase));
+            yield break;
+        }
+
+        if (text.Contains("/uploads/", StringComparison.OrdinalIgnoreCase))
+        {
+            yield return new Uri(text.Replace("/uploads/", "/api/uploads/", StringComparison.OrdinalIgnoreCase));
+        }
+    }
+
+    private bool TryCreateBase(out Uri root)
+    {
+        var value = AssetPathRoot?.Trim();
+        if (string.IsNullOrEmpty(value))
+        {
+            root = null!;
+            return false;
+        }
+
+        if (!value.EndsWith('/'))
+        {
+            value += "/";
+        }
+
+        return Uri.TryCreate(value, UriKind.Absolute, out root!);
+    }
+
+    private static bool LooksLikeImage(byte[] bytes) =>
+        bytes.Length > 12 && (
+            bytes[0] == 0x89 && bytes[1] == 0x50 && bytes[2] == 0x4E && bytes[3] == 0x47 ||
+            bytes[0] == 0xFF && bytes[1] == 0xD8 && bytes[2] == 0xFF ||
+            bytes[0] == (byte)'R' && bytes[8] == (byte)'W' && bytes[9] == (byte)'E' && bytes[10] == (byte)'B' ||
+            bytes[0] == (byte)'B' && bytes[1] == (byte)'M');
+
+    private static HttpClient CreateClient()
+    {
+        var client = new HttpClient { Timeout = TimeSpan.FromSeconds(20) };
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("YJCabin.Desktop");
+        return client;
     }
 }
 

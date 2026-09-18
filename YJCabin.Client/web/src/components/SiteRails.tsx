@@ -75,7 +75,7 @@ export function ProfileSearchRail() {
     <>
       <section className="rail-block">
         <div className="rail-avatar-wrap">
-          <img src="/yjcabin-puppy.png" alt="" className="rail-avatar" />
+          <img src="/yjcabin-puppy.webp" alt="" className="rail-avatar" />
         </div>
         <h2 className="rail-name">{about.data?.headline ?? (about.isFetched ? "YJCabin" : "\u00a0")}</h2>
         <nav className="rail-contacts" aria-label="联系方式">

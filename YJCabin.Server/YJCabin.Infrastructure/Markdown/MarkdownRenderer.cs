@@ -30,6 +30,7 @@ public sealed class MarkdownRenderer : IMarkdownRenderer
 
         var normalized = markdown.Replace("\r\n", "\n", StringComparison.Ordinal).Replace('\r', '\n');
         var html = Markdig.Markdown.ToHtml(normalized, Pipeline);
+        html = html.Replace("src=\"/uploads/", "src=\"/api/uploads/", StringComparison.Ordinal);
         return _sanitizer.Sanitize(html);
     }
 }

@@ -27,7 +27,7 @@ public sealed class MediaService : IMediaService
     {
         if (!AllowedTypes.Contains(contentType))
         {
-            throw new ValidationException("contentType", "Only jpeg, png, webp and markdown uploads are allowed.");
+            throw new ValidationException("contentType", "只支持 jpeg、png、webp 图片和 Markdown 文件。");
         }
 
         var stored = await _storage.SaveAsync(content, fileName, contentType, cancellationToken);

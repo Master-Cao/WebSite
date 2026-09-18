@@ -6,13 +6,13 @@
              x:Class="YJCabin.Desktop.Views.SettingsPage"
              x:Name="PageRoot"
              x:DataType="vm:SettingsViewModel">
-  <Grid RowDefinitions="Auto,*">
+  <Grid RowDefinitions="Auto,*,Auto">
     <Border Classes="glass" Padding="16,12" Margin="0,0,0,12">
       <DockPanel>
         <Button DockPanel.Dock="Right" Classes="compact" Content="刷新" Command="{Binding ReloadCommand}" />
         <StackPanel VerticalAlignment="Center" Spacing="2">
           <TextBlock Classes="kicker" Text="设置" />
-          <TextBlock Classes="muted" Text="在这里维护文章标签和公开站技能芯片" />
+          <TextBlock Classes="muted" Text="在这里维护文章标签、公开站技能芯片和 AI 摘要" />
         </StackPanel>
       </DockPanel>
     </Border>
@@ -97,13 +97,39 @@
                     Margin="8,0,0,0" />
             <TextBox Watermark="新技能名称" Text="{Binding NewSkillName}" />
           </DockPanel>
-          <TextBlock Grid.Row="4"
-                     Classes="muted"
-                     Margin="0,12,0,0"
-                     TextWrapping="Wrap"
-                     Text="{Binding Message}" />
         </Grid>
       </Border>
     </Grid>
+
+    <Border Grid.Row="2" Classes="glass" Padding="22" Margin="0,14,0,0">
+      <Grid ColumnDefinitions="*,14,*" RowDefinitions="Auto,Auto,Auto,Auto">
+        <TextBlock Classes="kicker" Grid.ColumnSpan="3" Text="Kimi 摘要" />
+        <TextBlock Grid.Row="1"
+                   Grid.ColumnSpan="3"
+                   Classes="muted"
+                   Margin="0,8,0,16"
+                   TextWrapping="Wrap"
+                   Text="使用 Kimi 开放平台（Moonshot）。国内地址 https://api.moonshot.cn/v1，推荐模型 kimi-k3。到 platform.moonshot.cn 创建 API Key，密钥只存在本机。" />
+        <StackPanel Grid.Row="2">
+          <TextBlock Classes="label" Text="接口地址" />
+          <TextBox Watermark="https://api.moonshot.cn/v1" Text="{Binding AiBaseUrl}" />
+        </StackPanel>
+        <StackPanel Grid.Row="2" Grid.Column="2">
+          <TextBlock Classes="label" Text="模型" />
+          <TextBox Watermark="kimi-k3" Text="{Binding AiModel}" />
+        </StackPanel>
+        <DockPanel Grid.Row="3" Grid.ColumnSpan="3" Margin="0,12,0,0">
+          <Button DockPanel.Dock="Right"
+                  Classes="primary compact"
+                  Content="保存"
+                  Command="{Binding SaveAiSettingsCommand}"
+                  Margin="8,0,0,0" />
+          <StackPanel>
+            <TextBlock Classes="label" Text="API Key" />
+            <TextBox PasswordChar="●" Text="{Binding AiApiKey}" />
+          </StackPanel>
+        </DockPanel>
+      </Grid>
+    </Border>
   </Grid>
 </UserControl>

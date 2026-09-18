@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { List, X } from "@phosphor-icons/react";
-import { Critters } from "../components/Animals";
+import { Critters, PetStage } from "../components/Animals";
 import { ICP_HREF, ICP_NO } from "../components/BeianNotice";
 import { BrandLogo } from "../components/BrandLogo";
 import { LoadingOverlay } from "../components/LoadingOverlay";
@@ -75,6 +75,7 @@ export function PublicLayout() {
 
         <aside className="site-rail site-rail-right glass">
           <MessageRail />
+          <PetStage />
           <TimelineRail />
         </aside>
 

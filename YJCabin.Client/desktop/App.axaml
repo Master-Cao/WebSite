@@ -5,6 +5,7 @@
              RequestedThemeVariant="Dark">
     <Application.Resources>
         <converters:StatusLabelConverter x:Key="StatusLabel" />
+        <converters:BoolToThicknessConverter x:Key="ImmersiveMargin" TrueThickness="0" FalseThickness="12" />
         <Color x:Key="VoidColor">#06101C</Color>
         <Color x:Key="InkColor">#E8F4FF</Color>
         <Color x:Key="MutedColor">#8BA3C4</Color>
@@ -33,6 +34,10 @@
         </LinearGradientBrush>
         <StreamGeometry x:Key="IconMailUnread">M20,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V6C22,4.89 21.1,4 20,4M20,8L12,13L4,8V6L12,11L20,6V8Z</StreamGeometry>
         <StreamGeometry x:Key="IconMailRead">M4,8L12,13L20,8L12,3L4,8M22,8V18A2,2 0 0,1 20,20H4A2,2 0 0,1 2,18V8C2,7.27 2.4,6.63 3,6.28L12,0.64L21,6.28C21.6,6.63 22,7.27 22,8Z</StreamGeometry>
+        <StreamGeometry x:Key="IconToastSuccess">M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M10,17L5,12L6.41,10.59L10,14.17L17.59,6.58L19,8L10,17Z</StreamGeometry>
+        <StreamGeometry x:Key="IconToastInfo">M13,9H11V7H13M13,17H11V11H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z</StreamGeometry>
+        <StreamGeometry x:Key="IconToastWarning">M13,14H11V10H13M13,18H11V16H13M1,21H23L12,2L1,21Z</StreamGeometry>
+        <StreamGeometry x:Key="IconToastError">M13,13H11V7H13M13,17H11V15H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z</StreamGeometry>
     </Application.Resources>
     <Application.Styles>
         <FluentTheme />
@@ -346,6 +351,10 @@
             <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
             <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
         </Style>
+        <Style Selector=".md-preview Image">
+            <Setter Property="MaxWidth" Value="720" />
+            <Setter Property="Stretch" Value="Uniform" />
+        </Style>
         <Style Selector="SelectableTextBlock.md-code-text">
             <Setter Property="Margin" Value="16,15,16,17" />
             <Setter Property="FontFamily" Value="Cascadia Mono, Consolas, ui-monospace, monospace" />
@@ -357,6 +366,49 @@
             <Setter Property="Width" Value="16" />
             <Setter Property="Height" Value="16" />
             <Setter Property="Stretch" Value="Uniform" />
+        </Style>
+        <Style Selector="Path.toast-icon">
+            <Setter Property="Width" Value="20" />
+            <Setter Property="Height" Value="20" />
+            <Setter Property="Stretch" Value="Uniform" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Border.toast">
+            <Setter Property="Background" Value="#F214243C" />
+            <Setter Property="BorderBrush" Value="#52A0D2FF" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="Padding" Value="14,12" />
+            <Setter Property="BoxShadow" Value="0 12 28 0 #66000000" />
+        </Style>
+        <Style Selector="Border.toast.success">
+            <Setter Property="BorderBrush" Value="#669EE4C6" />
+        </Style>
+        <Style Selector="Border.toast.info">
+            <Setter Property="BorderBrush" Value="#667ECFFF" />
+        </Style>
+        <Style Selector="Border.toast.warning">
+            <Setter Property="BorderBrush" Value="#66F5C16C" />
+        </Style>
+        <Style Selector="Border.toast.error">
+            <Setter Property="BorderBrush" Value="#66FF8B8B" />
+        </Style>
+        <Style Selector="TextBlock.toast-text">
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="LineHeight" Value="20" />
+        </Style>
+        <Style Selector="Button.toast-close">
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="Width" Value="28" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="8,-4,-4,0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
         </Style>
         <Style Selector="Border.status-icon">
             <Setter Property="Width" Value="32" />

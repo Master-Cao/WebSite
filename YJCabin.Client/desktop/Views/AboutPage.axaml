@@ -34,10 +34,6 @@
                      MinHeight="220"
                      Text="{Binding BioMarkdown}" />
           </Grid>
-          <TextBlock Grid.Row="3"
-                     Classes="muted"
-                     Margin="0,12,0,0"
-                     Text="{Binding Message}" />
         </Grid>
       </Border>
 

@@ -20,12 +20,15 @@ public partial class ArticlesViewModel : ViewModelBase
     [ObservableProperty] private ObservableCollection<TagChoice> _tagChoices = [];
     [ObservableProperty] private string _status = "Draft";
     [ObservableProperty] private string _message = "";
+    [ObservableProperty] private bool _isImmersive;
+    private readonly HashSet<string> _unsavedLocalImages = new(StringComparer.OrdinalIgnoreCase);
 
     public bool HasItems => Items.Count > 0;
     public bool ShowEditor => IsCreating || Selected is not null;
     public bool CanDelete => Selected is not null;
     public bool HasMarkdown => !string.IsNullOrWhiteSpace(Markdown);
     public string EditorTitle => IsCreating ? "新建文章" : "编辑文章";
+    public string ImmersiveButtonText => IsImmersive ? "退出沉浸" : "沉浸式编写";
     public string SlugHint => IsCreating || string.IsNullOrWhiteSpace(Slug)
         ? "保存后会根据标题自动生成网址"
         : $"/articles/{Slug}";
@@ -53,9 +56,72 @@ public partial class ArticlesViewModel : ViewModelBase
 
     partial void OnIsCreatingChanged(bool value) => NotifyEditor();
 
+    partial void OnIsImmersiveChanged(bool value) => OnPropertyChanged(nameof(ImmersiveButtonText));
+
     partial void OnSlugChanged(string value) => OnPropertyChanged(nameof(SlugHint));
 
-    partial void OnMarkdownChanged(string value) => OnPropertyChanged(nameof(HasMarkdown));
+    partial void OnMarkdownChanged(string value)
+    {
+        OnPropertyChanged(nameof(HasMarkdown));
+        OnPropertyChanged(nameof(PreviewMarkdown));
+    }
+
+    public string MediaBaseUrl => _api.BaseUrl.TrimEnd('/') + "/";
+
+    public string PreviewMarkdown
+    {
+        get
+        {
+            var root = _api.BaseUrl.TrimEnd('/');
+            var text = Markdown ?? "";
+            text = text.Replace($"]({root}/uploads/", $"]({root}/api/uploads/", StringComparison.Ordinal);
+            text = text.Replace("](/uploads/", $"]({root}/api/uploads/", StringComparison.Ordinal);
+            text = text.Replace("](/api/uploads/", $"]({root}/api/uploads/", StringComparison.Ordinal);
+            return text;
+        }
+    }
+
+    [RelayCommand]
+    private Task SummarizeAsync() => _busy.RunAsync("正在生成摘要…", SummarizeCoreAsync);
+
+    private async Task SummarizeCoreAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Markdown))
+        {
+            ToastWarn("请先写正文，再生成摘要。");
+            return;
+        }
+
+        try
+        {
+            Summary = await AiSummaryClient.SummarizeArticleAsync(Title, Markdown);
+            ToastSuccess("摘要已生成，可再手动修改。");
+        }
+        catch (Exception ex)
+        {
+            ToastError(ex.Message);
+        }
+    }
+
+    public async Task<int> InsertImageAsync(int caret, Stream content, string fileName, string contentType)
+    {
+        try
+        {
+            var id = await LocalMediaStore.SaveAsync(content, fileName);
+            _unsavedLocalImages.Add(id);
+            var snippet = $"\n![图片]({LocalMediaStore.ToUrl(id)})\n";
+            var text = Markdown ?? "";
+            caret = Math.Clamp(caret, 0, text.Length);
+            Markdown = text.Insert(caret, snippet);
+            ToastInfo("图片已放入本地缓存，发布时才会上传。");
+            return caret + snippet.Length;
+        }
+        catch (Exception ex)
+        {
+            ToastError(ex.Message);
+            return caret;
+        }
+    }
 
     [RelayCommand]
     public Task ReloadAsync() => _busy.RunAsync("正在加载文章…", LoadListAsync);
@@ -66,10 +132,6 @@ public partial class ArticlesViewModel : ViewModelBase
         var slug = Selected?.Slug;
         Items = new ObservableCollection<ArticleSummary>(result.Items);
         Selected = slug is null ? null : Items.FirstOrDefault(item => item.Slug == slug);
-        if (Selected is null && !IsCreating)
-        {
-            Message = Items.Count == 0 ? "还没有文章，点击新建开始。" : "";
-        }
     }
 
     [RelayCommand]
@@ -77,11 +139,11 @@ public partial class ArticlesViewModel : ViewModelBase
 
     private async Task StartNewAsync()
     {
+        DiscardUnsavedLocalImages();
         IsCreating = true;
         Selected = null;
         Slug = Title = Summary = Markdown = "";
         Status = "Draft";
-        Message = "";
         await LoadTagChoicesAsync([]);
     }
 
@@ -89,13 +151,27 @@ public partial class ArticlesViewModel : ViewModelBase
     private Task SaveAsync() => _busy.RunAsync("正在保存文章…", () => SaveCoreAsync(false));
 
     [RelayCommand]
-    private Task PublishAsync() => _busy.RunAsync("正在发布文章…", () => SaveCoreAsync(true));
+    private Task PublishAsync() => _busy.RunAsync(
+        LocalMediaStore.ContainsLocal(Markdown) ? "正在上传图片并发布…" : "正在发布文章…",
+        () => SaveCoreAsync(true));
 
     private async Task SaveCoreAsync(bool publish)
     {
-        if (string.IsNullOrWhiteSpace(Title) || string.IsNullOrWhiteSpace(Markdown))
+        if (string.IsNullOrWhiteSpace(Title) && string.IsNullOrWhiteSpace(Markdown))
         {
-            Message = "请填写标题和正文后再保存。";
+            ToastWarn("请填写标题和正文后再保存。");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(Title))
+        {
+            ToastWarn("请填写标题后再保存。");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(Markdown))
+        {
+            ToastWarn("请填写正文后再保存。");
             return;
         }
 
@@ -106,32 +182,48 @@ public partial class ArticlesViewModel : ViewModelBase
                 Status = "Published";
             }
 
+            var markdown = Markdown;
+            var uploaded = Array.Empty<string>();
+            if (publish)
+            {
+                uploaded = LocalMediaStore.ListIds(markdown).ToArray();
+                markdown = await LocalMediaStore.UploadAndRewriteAsync(markdown, _api.UploadMediaAsync);
+                Markdown = markdown;
+            }
+
             var currentSlug = IsCreating ? null : Selected?.Slug;
             var saved = await _api.SaveArticleAsync(currentSlug, new UpsertArticleRequest
             {
                 Slug = null,
                 Title = Title.Trim(),
                 Summary = Summary,
-                Markdown = Markdown,
+                Markdown = markdown,
                 Status = Status,
                 Tags = TagCatalog.SelectedNames(TagChoices)
             });
+            if (publish)
+            {
+                LocalMediaStore.DeleteAll(uploaded);
+            }
+
+            _unsavedLocalImages.Clear();
             IsCreating = false;
             Slug = saved.Slug;
             if (publish || saved.Status == "Published")
             {
-                await ReturnToListAsync($"已发布「{saved.Title}」。");
+                await ReturnToListAsync();
+                ToastSuccess($"已发布「{saved.Title}」。");
                 return;
             }
 
-            Message = "已保存草稿。";
+            ToastSuccess("已保存草稿。");
             var result = await _api.ListArticlesAsync();
             Items = new ObservableCollection<ArticleSummary>(result.Items);
             Selected = Items.FirstOrDefault(item => item.Slug == saved.Slug);
         }
         catch (Exception ex)
         {
-            Message = ex.Message;
+            ToastError(ex.Message);
         }
     }
 
@@ -146,22 +238,25 @@ public partial class ArticlesViewModel : ViewModelBase
         }
 
         await _api.DeleteArticleAsync(Selected.Slug);
+        LocalMediaStore.DeleteAll(LocalMediaStore.ListIds(Markdown).Concat(_unsavedLocalImages));
+        _unsavedLocalImages.Clear();
         IsCreating = false;
         Selected = null;
+        IsImmersive = false;
         Slug = Title = Summary = Markdown = "";
         TagChoices = [];
         Status = "Draft";
-        Message = "已删除";
+        ToastSuccess("文章已删除。");
         await LoadListAsync();
     }
 
-    private async Task ReturnToListAsync(string message)
+    private async Task ReturnToListAsync()
     {
         IsCreating = false;
         Selected = null;
+        IsImmersive = false;
         var result = await _api.ListArticlesAsync();
         Items = new ObservableCollection<ArticleSummary>(result.Items);
-        Message = Items.Count == 0 ? "还没有文章，点击新建开始。" : message;
     }
 
     [RelayCommand]
@@ -176,11 +271,24 @@ public partial class ArticlesViewModel : ViewModelBase
     }
 
     [RelayCommand]
+    private void ToggleImmersive() => IsImmersive = !IsImmersive;
+
+    public void ExitImmersive() => IsImmersive = false;
+
+    [RelayCommand]
     private void CloseEditor()
     {
+        DiscardUnsavedLocalImages();
+        IsImmersive = false;
         IsCreating = false;
         Selected = null;
         Message = "";
+    }
+
+    private void DiscardUnsavedLocalImages()
+    {
+        LocalMediaStore.DeleteAll(_unsavedLocalImages);
+        _unsavedLocalImages.Clear();
     }
 
     private void NotifyEditor()
@@ -193,6 +301,7 @@ public partial class ArticlesViewModel : ViewModelBase
 
     private Task LoadDetailAsync(string slug) => _busy.RunAsync("正在打开文章…", async () =>
     {
+        DiscardUnsavedLocalImages();
         var detail = await _api.GetArticleAsync(slug);
         Slug = detail.Slug;
         Title = detail.Title;

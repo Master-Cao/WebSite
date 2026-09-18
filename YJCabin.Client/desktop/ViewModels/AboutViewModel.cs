@@ -39,7 +39,6 @@ public partial class AboutViewModel : ViewModelBase
         _extraLinks = about.SocialLinks
             .Where(link => !Matches(link, "qq", "腾讯", "mail", "邮箱", "email", "微信", "wechat", "weixin", "github"))
             .ToList();
-        Message = "";
     }
 
     [RelayCommand]
@@ -63,11 +62,11 @@ public partial class AboutViewModel : ViewModelBase
                 Skills = current.Skills,
                 SocialLinks = links
             });
-            Message = "已保存";
+            ToastSuccess("简介已保存。");
         }
         catch (Exception ex)
         {
-            Message = ex.Message;
+            ToastError(ex.Message);
         }
     }
 

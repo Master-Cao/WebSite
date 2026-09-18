@@ -13,12 +13,44 @@ public sealed class ApiClient
         Converters = { new JsonStringEnumConverter() }
     };
 
+    public string BaseUrl { get; }
+
     public ApiClient(string baseUrl)
     {
-        _http = new HttpClient { BaseAddress = new Uri(baseUrl) };
+        BaseUrl = baseUrl.TrimEnd('/');
+        _http = new HttpClient { BaseAddress = new Uri(BaseUrl + "/") };
     }
 
     public string? AccessToken { get; private set; }
+
+    public async Task<MediaAssetDto> UploadMediaAsync(Stream content, string fileName, string contentType, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(AccessToken))
+        {
+            throw new InvalidOperationException("Not authenticated.");
+        }
+
+        using var buffer = new MemoryStream();
+        await content.CopyToAsync(buffer, cancellationToken);
+        var bytes = buffer.ToArray();
+        buffer.Position = 0;
+        using var form = new MultipartFormDataContent();
+        var part = new StreamContent(buffer);
+        part.Headers.ContentType = new MediaTypeHeaderValue(string.IsNullOrWhiteSpace(contentType) ? "application/octet-stream" : contentType);
+        form.Add(part, "file", fileName);
+        using var request = new HttpRequestMessage(HttpMethod.Post, "api/admin/media") { Content = form };
+        using var response = await _http.SendAsync(request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            var text = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new InvalidOperationException(ReadError(text, response.ReasonPhrase));
+        }
+
+        var asset = await response.Content.ReadFromJsonAsync<MediaAssetDto>(Json, cancellationToken)
+                    ?? throw new InvalidOperationException("Empty response.");
+        MediaImageCache.Store(asset.Url, bytes);
+        return asset;
+    }
 
     public async Task LoginAsync(string userName, string password, CancellationToken cancellationToken = default)
     {
@@ -144,7 +176,7 @@ public sealed class ApiClient
                     message.ValueKind == JsonValueKind.String &&
                     !string.IsNullOrWhiteSpace(message.GetString()))
                 {
-                    return message.GetString()!;
+                    return LocalizeError(message.GetString()!);
                 }
             }
             catch (JsonException)
@@ -152,8 +184,25 @@ public sealed class ApiClient
             }
         }
 
-        return string.IsNullOrWhiteSpace(text) ? fallback ?? "请求失败" : text;
+        return LocalizeError(string.IsNullOrWhiteSpace(text) ? fallback ?? "请求失败" : text);
     }
+
+    private static string LocalizeError(string message) => message switch
+    {
+        "Title and markdown are required." => "标题和正文不能为空。",
+        "Title and summary are required." => "标题和摘要不能为空。",
+        "Slug cannot be empty." => "网址别名不能为空。",
+        "Not authenticated." => "请先登录。",
+        "File is required." => "请选择要上传的文件。",
+        "Empty response." => "服务器没有返回内容。",
+        "Invalid credentials." => "账号或密码不正确。",
+        "An unexpected error occurred." => "服务暂时出了问题，请稍后再试。",
+        _ when message.Contains("Only jpeg, png, webp", StringComparison.OrdinalIgnoreCase)
+            => "只支持 jpeg、png、webp 图片。",
+        _ when message.Contains("was not found", StringComparison.OrdinalIgnoreCase)
+            => "没有找到对应的内容。",
+        _ => message
+    };
 }
 
 public sealed class PagedResult<T>
@@ -272,4 +321,53 @@ public sealed class AuthResponse
     public string RefreshToken { get; set; } = string.Empty;
     public string UserName { get; set; } = string.Empty;
     public string Role { get; set; } = string.Empty;
+}
+
+public sealed class MediaAssetDto
+{
+    public Guid Id { get; set; }
+    public string FileName { get; set; } = string.Empty;
+    public string Url { get; set; } = string.Empty;
+    public string ContentType { get; set; } = string.Empty;
+    public long Size { get; set; }
+}
+
+internal static class MediaImageCache
+{
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, byte[]> Items = new(StringComparer.OrdinalIgnoreCase);
+
+    public static void Store(string url, byte[] bytes)
+    {
+        if (string.IsNullOrWhiteSpace(url) || bytes.Length == 0)
+        {
+            return;
+        }
+
+        Items[url] = bytes;
+        var file = Path.GetFileName(url.TrimEnd('/'));
+        if (!string.IsNullOrEmpty(file))
+        {
+            Items[file] = bytes;
+            Items["/uploads/" + file] = bytes;
+            Items["/api/uploads/" + file] = bytes;
+        }
+    }
+
+    public static bool TryOpen(string path, out MemoryStream? stream)
+    {
+        stream = null;
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return false;
+        }
+
+        if (Items.TryGetValue(path, out var bytes) ||
+            Items.TryGetValue(Path.GetFileName(path.TrimEnd('/')), out bytes))
+        {
+            stream = new MemoryStream(bytes, writable: false);
+            return true;
+        }
+
+        return false;
+    }
 }

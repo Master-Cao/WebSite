@@ -1,12 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { api } from "../api/client";
-import type { AboutDto, ArticleSummary, PagedResult, ProjectSummary } from "../api/types";
-import { PetStage } from "../components/Animals";
+import type { ArticleSummary, PagedResult, ProjectSummary } from "../api/types";
 import { ArticleRow, WorkRow } from "../components/ContentRows";
 import { Note, SkeletonRows } from "../components/Note";
-import { firstPlainLine } from "../lib/format";
-import { btnGhost, btnPrimary } from "../ui";
 
 export function HomePage() {
   const projects = useQuery({
@@ -17,33 +14,9 @@ export function HomePage() {
     queryKey: ["articles", "home"],
     queryFn: () => api<PagedResult<ArticleSummary>>("/api/articles?pageSize=8")
   });
-  const about = useQuery({
-    queryKey: ["about"],
-    queryFn: () => api<AboutDto>("/api/about")
-  });
 
   return (
     <div className="wrap home-board">
-      <section className="glass hero home-hero">
-        <div>
-          <p className="kicker">博客</p>
-          <h1 className="display">{about.data?.headline ?? (about.isFetched ? "YJCabin" : "\u00a0")}</h1>
-          <p className="lede">{about.data ? firstPlainLine(about.data.bioMarkdown) : "\u00a0"}</p>
-          <div className="actions">
-            <Link to="/articles" className={btnPrimary}>
-              阅读文章
-            </Link>
-            <Link to="/works" className={btnGhost}>
-              查看作品
-            </Link>
-            <Link to="/about" className={btnGhost}>
-              简介
-            </Link>
-          </div>
-        </div>
-        <PetStage />
-      </section>
-
       <section className="glass panel home-articles">
         <div className="chip-row" style={{ justifyContent: "space-between", marginTop: 0 }}>
           <h2>文章</h2>

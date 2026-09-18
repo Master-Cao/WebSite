@@ -1,13 +1,19 @@
+import { lazy, Suspense } from "react";
 import { matchPath, Navigate, Route, Routes, useLocation, type Location } from "react-router-dom";
 import { PublicLayout } from "./layouts/PublicLayout";
 import { HomePage } from "./pages/HomePage";
-import { WorksPage } from "./pages/WorksPage";
-import { WorkDetailPage } from "./pages/WorkDetailPage";
-import { ArticlesPage } from "./pages/ArticlesPage";
-import { ArticleDetailPage } from "./pages/ArticleDetailPage";
-import { ArchivePage } from "./pages/ArchivePage";
-import { AboutPage } from "./pages/AboutPage";
 import { isContentSlug } from "./lib/content";
+
+const WorksPage = lazy(() => import("./pages/WorksPage").then((module) => ({ default: module.WorksPage })));
+const ArticlesPage = lazy(() => import("./pages/ArticlesPage").then((module) => ({ default: module.ArticlesPage })));
+const ArchivePage = lazy(() => import("./pages/ArchivePage").then((module) => ({ default: module.ArchivePage })));
+const AboutPage = lazy(() => import("./pages/AboutPage").then((module) => ({ default: module.AboutPage })));
+const ArticleDetailPage = lazy(() =>
+  import("./pages/ArticleDetailPage").then((module) => ({ default: module.ArticleDetailPage }))
+);
+const WorkDetailPage = lazy(() =>
+  import("./pages/WorkDetailPage").then((module) => ({ default: module.WorkDetailPage }))
+);
 
 function readerMatch(pathname: string) {
   const article = matchPath("/articles/:slug", pathname);
@@ -39,18 +45,28 @@ export default function App() {
 
   return (
     <>
-      <Routes location={routesLocation(location)}>
-        <Route element={<PublicLayout />}>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/works" element={<WorksPage />} />
-          <Route path="/articles" element={<ArticlesPage />} />
-          <Route path="/archive" element={<ArchivePage />} />
-          <Route path="/about" element={<AboutPage />} />
-        </Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-      {reader?.kind === "article" && <ArticleDetailPage slug={reader.slug} />}
-      {reader?.kind === "work" && <WorkDetailPage slug={reader.slug} />}
+      <Suspense fallback={null}>
+        <Routes location={routesLocation(location)}>
+          <Route element={<PublicLayout />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/works" element={<WorksPage />} />
+            <Route path="/articles" element={<ArticlesPage />} />
+            <Route path="/archive" element={<ArchivePage />} />
+            <Route path="/about" element={<AboutPage />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
+      {reader?.kind === "article" && (
+        <Suspense fallback={null}>
+          <ArticleDetailPage slug={reader.slug} />
+        </Suspense>
+      )}
+      {reader?.kind === "work" && (
+        <Suspense fallback={null}>
+          <WorkDetailPage slug={reader.slug} />
+        </Suspense>
+      )}
     </>
   );
 }

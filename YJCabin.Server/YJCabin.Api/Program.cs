@@ -1,6 +1,8 @@
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.OpenApi;
 using YJCabin.Api.Middleware;
@@ -58,6 +60,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         options.TokenValidationParameters = YJCabin.Infrastructure.DependencyInjection.CreateTokenValidationParameters(builder.Configuration);
     });
 builder.Services.AddAuthorization();
+var keysPath = builder.Configuration["DataProtection:KeysPath"];
+if (!string.IsNullOrWhiteSpace(keysPath))
+{
+    Directory.CreateDirectory(keysPath);
+    builder.Services.AddDataProtection()
+        .SetApplicationName("YJCabin")
+        .PersistKeysToFileSystem(new DirectoryInfo(keysPath));
+}
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("web", policy =>
@@ -88,19 +98,31 @@ var content = app.Services.GetRequiredService<Microsoft.Extensions.Options.IOpti
 var uploads = content.UploadsPath;
 Directory.CreateDirectory(uploads);
 
-app.UseMiddleware<ExceptionHandlingMiddleware>();
-app.UseSwagger();
-app.UseSwaggerUI();
-if (!app.Environment.IsDevelopment())
+app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
-    app.UseHttpsRedirection();
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 app.UseCors("web");
-app.UseStaticFiles(new StaticFileOptions
+var uploadPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
 {
-    FileProvider = new PhysicalFileProvider(uploads),
-    RequestPath = content.PublicUploadsBase
-});
+    string.IsNullOrWhiteSpace(content.PublicUploadsBase) ? "/uploads" : content.PublicUploadsBase,
+    "/uploads",
+    "/api/uploads"
+};
+foreach (var requestPath in uploadPaths)
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(uploads),
+        RequestPath = requestPath.TrimEnd('/')
+    });
+}
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();

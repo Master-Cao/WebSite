@@ -59,10 +59,6 @@ public partial class ProjectsViewModel : ViewModelBase
         var slug = Selected?.Slug;
         Items = new ObservableCollection<ProjectSummary>(result.Items);
         Selected = slug is null ? null : Items.FirstOrDefault(item => item.Slug == slug);
-        if (Selected is null && !IsCreating)
-        {
-            Message = Items.Count == 0 ? "还没有作品，点击新建开始。" : "";
-        }
     }
 
     [RelayCommand]
@@ -72,7 +68,6 @@ public partial class ProjectsViewModel : ViewModelBase
         Selected = null;
         Slug = Title = Summary = Description = "";
         Status = "Draft";
-        Message = "";
         TagChoices = await TagCatalog.LoadAsync(_api, []);
     });
 
@@ -84,9 +79,21 @@ public partial class ProjectsViewModel : ViewModelBase
 
     private async Task SaveCoreAsync(bool publish)
     {
+        if (string.IsNullOrWhiteSpace(Title) && string.IsNullOrWhiteSpace(Summary))
+        {
+            ToastWarn("请填写标题和摘要后再保存。");
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(Title))
         {
-            Message = "请填写标题后再保存。";
+            ToastWarn("请填写标题后再保存。");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(Summary))
+        {
+            ToastWarn("请填写摘要后再保存。");
             return;
         }
 
@@ -110,18 +117,19 @@ public partial class ProjectsViewModel : ViewModelBase
             IsCreating = false;
             if (publish || saved.Status == "Published")
             {
-                await ReturnToListAsync($"已发布「{saved.Title}」。");
+                await ReturnToListAsync();
+                ToastSuccess($"已发布「{saved.Title}」。");
                 return;
             }
 
-            Message = "已保存草稿。";
+            ToastSuccess("已保存草稿。");
             var result = await _api.ListProjectsAsync();
             Items = new ObservableCollection<ProjectSummary>(result.Items);
             Selected = Items.FirstOrDefault(item => item.Slug == saved.Slug);
         }
         catch (Exception ex)
         {
-            Message = ex.Message;
+            ToastError(ex.Message);
         }
     }
 
@@ -141,17 +149,16 @@ public partial class ProjectsViewModel : ViewModelBase
         Slug = Title = Summary = Description = "";
         TagChoices = [];
         Status = "Draft";
-        Message = "已删除";
+        ToastSuccess("作品已删除。");
         await LoadListAsync();
     }
 
-    private async Task ReturnToListAsync(string message)
+    private async Task ReturnToListAsync()
     {
         IsCreating = false;
         Selected = null;
         var result = await _api.ListProjectsAsync();
         Items = new ObservableCollection<ProjectSummary>(result.Items);
-        Message = Items.Count == 0 ? "还没有作品，点击新建开始。" : message;
     }
 
     [RelayCommand]
@@ -170,7 +177,6 @@ public partial class ProjectsViewModel : ViewModelBase
     {
         IsCreating = false;
         Selected = null;
-        Message = "";
     }
 
     private void NotifyEditor()

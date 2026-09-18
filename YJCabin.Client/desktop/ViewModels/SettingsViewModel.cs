@@ -15,6 +15,10 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty] private string _newTagName = "";
     [ObservableProperty] private string _newSkillName = "";
     [ObservableProperty] private string _message = "";
+    [ObservableProperty] private string _aiBaseUrl = "";
+    [ObservableProperty] private string _aiModel = "";
+    [ObservableProperty] private string _aiApiKey = "";
+    [ObservableProperty] private string _aiMessage = "";
 
     public SettingsViewModel(ApiClient api, BusyController busy)
     {
@@ -31,7 +35,40 @@ public partial class SettingsViewModel : ViewModelBase
         var about = await _api.GetAboutAsync();
         Tags = new ObservableCollection<TagDto>(tags.OrderBy(x => x.Name));
         Skills = new ObservableCollection<string>(about.Skills);
+        var ai = AiSettings.Load();
+        AiBaseUrl = ai.BaseUrl;
+        AiModel = ai.Model;
+        AiApiKey = ai.ApiKey;
         Message = "";
+    }
+
+    [RelayCommand]
+    private void SaveAiSettings()
+    {
+        try
+        {
+            var settings = new AiSettings
+            {
+                BaseUrl = string.IsNullOrWhiteSpace(AiBaseUrl) ? AiSettings.DefaultBaseUrl : AiBaseUrl.Trim(),
+                Model = string.IsNullOrWhiteSpace(AiModel) ? AiSettings.DefaultModel : AiModel.Trim(),
+                ApiKey = AiApiKey.Trim()
+            };
+            settings.Save();
+            AiBaseUrl = settings.BaseUrl;
+            AiModel = settings.Model;
+            if (settings.IsConfigured)
+            {
+                ToastSuccess("Kimi 设置已保存。");
+            }
+            else
+            {
+                ToastWarn("已保存，但还缺少 API Key，生成摘要前请补全。");
+            }
+        }
+        catch (Exception ex)
+        {
+            ToastError(ex.Message);
+        }
     }
 
     [RelayCommand]
@@ -40,7 +77,7 @@ public partial class SettingsViewModel : ViewModelBase
         var name = NewTagName.Trim();
         if (string.IsNullOrWhiteSpace(name))
         {
-            Message = "请输入标签名称。";
+            ToastWarn("请输入标签名称。");
             return;
         }
 
@@ -49,11 +86,11 @@ public partial class SettingsViewModel : ViewModelBase
             var created = await _api.CreateTagAsync(name);
             Tags.Add(created);
             NewTagName = "";
-            Message = $"已添加标签「{created.Name}」。";
+            ToastSuccess($"已添加标签「{created.Name}」。");
         }
         catch (Exception ex)
         {
-            Message = ex.Message;
+            ToastError(ex.Message);
         }
     });
 
@@ -69,11 +106,11 @@ public partial class SettingsViewModel : ViewModelBase
         {
             await _api.DeleteTagAsync(tag.Id);
             Tags.Remove(tag);
-            Message = $"已删除标签「{tag.Name}」。";
+            ToastSuccess($"已删除标签「{tag.Name}」。");
         }
         catch (Exception ex)
         {
-            Message = ex.Message;
+            ToastError(ex.Message);
         }
     });
 
@@ -83,13 +120,13 @@ public partial class SettingsViewModel : ViewModelBase
         var name = NewSkillName.Trim();
         if (string.IsNullOrWhiteSpace(name))
         {
-            Message = "请输入技能名称。";
+            ToastWarn("请输入技能名称。");
             return;
         }
 
         if (Skills.Any(item => item.Equals(name, StringComparison.OrdinalIgnoreCase)))
         {
-            Message = $"技能「{name}」已存在。";
+            ToastWarn($"技能「{name}」已存在。");
             return;
         }
 
@@ -128,11 +165,11 @@ public partial class SettingsViewModel : ViewModelBase
                 Skills = Skills.ToList(),
                 SocialLinks = about.SocialLinks
             });
-            Message = ok;
+            ToastSuccess(ok);
         }
         catch (Exception ex)
         {
-            Message = ex.Message;
+            ToastError(ex.Message);
             await LoadCoreAsync();
         }
     }

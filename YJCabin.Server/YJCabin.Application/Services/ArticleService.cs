@@ -92,7 +92,7 @@ public sealed class ArticleService : IArticleService
     {
         if (string.IsNullOrWhiteSpace(request.Title) || string.IsNullOrWhiteSpace(request.Markdown))
         {
-            throw new ValidationException("title", "Title and markdown are required.");
+            throw new ValidationException("title", "标题和正文不能为空。");
         }
 
         var publishedAt = DtoMapper.ResolvePublishedAt(request.Status, request.PublishedAt);

@@ -55,9 +55,16 @@ public partial class MessagesViewModel : ViewModelBase
             return;
         }
 
-        await _api.PatchMessageAsync(Selected.Id, true, null);
-        await LoadListAsync();
-        Message = "已标为已读";
+        try
+        {
+            await _api.PatchMessageAsync(Selected.Id, true, null);
+            await LoadListAsync();
+            ToastSuccess("已标为已读。");
+        }
+        catch (Exception ex)
+        {
+            ToastError(ex.Message);
+        }
     });
 
     [RelayCommand]
@@ -68,9 +75,16 @@ public partial class MessagesViewModel : ViewModelBase
             return;
         }
 
-        await _api.PatchMessageAsync(Selected.Id, null, true);
-        await LoadListAsync();
-        Message = "已标为已回复";
+        try
+        {
+            await _api.PatchMessageAsync(Selected.Id, null, true);
+            await LoadListAsync();
+            ToastSuccess("已标为已回复。");
+        }
+        catch (Exception ex)
+        {
+            ToastError(ex.Message);
+        }
     });
 
     [RelayCommand]

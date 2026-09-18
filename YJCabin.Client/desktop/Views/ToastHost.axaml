@@ -1,0 +1,59 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:svc="using:YJCabin.Desktop.Services"
+             x:Class="YJCabin.Desktop.Views.ToastHost"
+             x:DataType="svc:ToastCenter"
+             IsHitTestVisible="False">
+  <ItemsControl HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Margin="0,20,20,0"
+                Width="360"
+                IsHitTestVisible="True"
+                ItemsSource="{Binding Items}">
+    <ItemsControl.ItemsPanel>
+      <ItemsPanelTemplate>
+        <StackPanel Spacing="10" />
+      </ItemsPanelTemplate>
+    </ItemsControl.ItemsPanel>
+    <ItemsControl.ItemTemplate>
+      <DataTemplate x:DataType="svc:ToastItem">
+        <Border Classes="toast"
+                IsHitTestVisible="True"
+                Classes.success="{Binding IsSuccess}"
+                Classes.info="{Binding IsInfo}"
+                Classes.warning="{Binding IsWarning}"
+                Classes.error="{Binding IsError}">
+          <DockPanel>
+            <Button DockPanel.Dock="Right"
+                    Classes="toast-close"
+                    Content="×"
+                    Tag="{Binding}"
+                    Click="OnDismiss" />
+            <Panel Width="28" Height="28" Margin="0,0,10,0" VerticalAlignment="Top">
+              <Path Classes="toast-icon"
+                    IsVisible="{Binding IsSuccess}"
+                    Data="{StaticResource IconToastSuccess}"
+                    Fill="#9EE4C6" />
+              <Path Classes="toast-icon"
+                    IsVisible="{Binding IsInfo}"
+                    Data="{StaticResource IconToastInfo}"
+                    Fill="#7ECFFF" />
+              <Path Classes="toast-icon"
+                    IsVisible="{Binding IsWarning}"
+                    Data="{StaticResource IconToastWarning}"
+                    Fill="#F5C16C" />
+              <Path Classes="toast-icon"
+                    IsVisible="{Binding IsError}"
+                    Data="{StaticResource IconToastError}"
+                    Fill="#FF8B8B" />
+            </Panel>
+            <TextBlock Classes="toast-text"
+                       TextWrapping="Wrap"
+                       VerticalAlignment="Center"
+                       Text="{Binding Text}" />
+          </DockPanel>
+        </Border>
+      </DataTemplate>
+    </ItemsControl.ItemTemplate>
+  </ItemsControl>
+</UserControl>

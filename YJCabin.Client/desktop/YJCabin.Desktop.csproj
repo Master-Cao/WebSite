@@ -12,6 +12,9 @@
     <RootNamespace>YJCabin.Desktop</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <None Update="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
     <AvaloniaResource Include="..\web\public\yjcabin-puppy.png" Link="Assets\yjcabin-puppy.png" />
   </ItemGroup>

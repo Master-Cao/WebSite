@@ -1,8 +1,11 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "@phosphor-icons/react";
 import type { ContactCard } from "../lib/contacts";
-import { ContactMark3D } from "./ContactMark3D";
+
+const ContactMark3D = lazy(() =>
+  import("./ContactMark3D").then((module) => ({ default: module.ContactMark3D }))
+);
 
 type ContactCardDialogProps = {
   card: ContactCard;
@@ -45,7 +48,9 @@ export function ContactCardDialog({ card, onClose }: ContactCardDialogProps) {
         onClick={(event) => event.stopPropagation()}
       >
         <div className="contact-dialog-stage" aria-hidden="true">
-          <ContactMark3D kind={card.kind} />
+          <Suspense fallback={null}>
+            <ContactMark3D kind={card.kind} />
+          </Suspense>
         </div>
         <div className="contact-dialog-body">
           <button type="button" className="contact-dialog-close" onClick={onClose} aria-label="关闭">

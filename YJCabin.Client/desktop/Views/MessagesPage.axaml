@@ -81,7 +81,6 @@
             <Button Classes="compact" Content="标为已回复" Command="{Binding MarkRepliedCommand}" />
             <Button Classes="compact" Content="返回" Command="{Binding CloseDetailCommand}" />
           </StackPanel>
-          <TextBlock Classes="muted" Text="{Binding Message}" />
         </StackPanel>
         <ScrollViewer>
           <StackPanel Spacing="10">

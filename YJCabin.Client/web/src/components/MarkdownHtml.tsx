@@ -1,15 +1,20 @@
 import { MouseEvent, useLayoutEffect, useRef } from "react";
-import { highlightCode, languageLabel } from "../lib/highlight";
 
 type MarkdownHtmlProps = {
   html: string;
   className?: string;
 };
 
-function enhanceBlocks(root: HTMLElement) {
-  for (const code of root.querySelectorAll("pre > code")) {
+async function enhanceBlocks(root: HTMLElement) {
+  const codes = [...root.querySelectorAll("pre > code")].filter(
+    (code) => code instanceof HTMLElement && code.parentElement && !code.parentElement.closest(".md-code")
+  ) as HTMLElement[];
+  if (!codes.length) return;
+
+  const { highlightCode, languageLabel } = await import("../lib/highlight");
+  for (const code of codes) {
     const pre = code.parentElement;
-    if (!(code instanceof HTMLElement) || !pre || pre.closest(".md-code")) continue;
+    if (!pre || pre.closest(".md-code")) continue;
 
     const detected = highlightCode(code);
     const wrap = document.createElement("div");
@@ -61,7 +66,9 @@ export function MarkdownHtml({ html, className }: MarkdownHtmlProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
-    if (ref.current) enhanceBlocks(ref.current);
+    const node = ref.current;
+    if (!node) return;
+    void enhanceBlocks(node);
   }, [html]);
 
   const onClick = async (event: MouseEvent<HTMLDivElement>) => {

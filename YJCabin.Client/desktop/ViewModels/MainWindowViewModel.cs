@@ -36,12 +36,14 @@ public partial class MainWindowViewModel : ViewModelBase
         new("articles", "文章", "撰写与发布"),
         new("about", "关于我", "简介与联系方式"),
         new("messages", "留言", "查看访客留言"),
-        new("settings", "设置", "标签与技能芯片")
+        new("settings", "设置", "标签、技能与 AI")
     ];
 
     public bool HasLoginError => !string.IsNullOrWhiteSpace(LoginError);
     public bool HasPasswordMessage => !string.IsNullOrWhiteSpace(PasswordMessage);
     public bool HasPasswordError => HasPasswordMessage && !PasswordSucceeded;
+    public bool IsImmersiveWriting =>
+        IsAuthenticated && Articles.IsImmersive && SelectedNav?.Key == "articles";
 
     public MainWindowViewModel(ApiClient api)
     {
@@ -52,6 +54,13 @@ public partial class MainWindowViewModel : ViewModelBase
         Messages = new MessagesViewModel(api, Busy);
         Settings = new SettingsViewModel(api, Busy);
         SelectedNav = NavItems[0];
+        Articles.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName is nameof(ArticlesViewModel.IsImmersive) or null)
+            {
+                OnPropertyChanged(nameof(IsImmersiveWriting));
+            }
+        };
         About.PropertyChanged += (_, args) =>
         {
             if (args.PropertyName is nameof(AboutViewModel.Headline) or null)
@@ -80,11 +89,19 @@ public partial class MainWindowViewModel : ViewModelBase
             "settings" => Settings,
             _ => null
         };
+        if (value?.Key != "articles")
+        {
+            Articles.ExitImmersive();
+        }
+
+        OnPropertyChanged(nameof(IsImmersiveWriting));
         if (IsAuthenticated && value is not null)
         {
             Status = $"当前模块：{value.Title}";
         }
     }
+
+    partial void OnIsAuthenticatedChanged(bool value) => OnPropertyChanged(nameof(IsImmersiveWriting));
 
     partial void OnUserNameChanged(string value) => LoginCommand.NotifyCanExecuteChanged();
 
@@ -118,9 +135,10 @@ public partial class MainWindowViewModel : ViewModelBase
         try
         {
             await Busy.RunAsync("正在登录…", () => _api.LoginAsync(UserName.Trim(), Password));
-            IsAuthenticated = true;
-            SelectedNav ??= NavItems[0];
-            Status = $"当前模块：{SelectedNav.Title}";
+        IsAuthenticated = true;
+        SelectedNav ??= NavItems[0];
+        Status = $"当前模块：{SelectedNav.Title}";
+        OnPropertyChanged(nameof(IsImmersiveWriting));
             await Task.WhenAll(
                 Projects.ReloadAsync(),
                 Articles.ReloadAsync(),
@@ -132,6 +150,7 @@ public partial class MainWindowViewModel : ViewModelBase
         catch (Exception ex)
         {
             LoginError = FriendlyLoginError(ex.Message);
+            ToastError(LoginError);
         }
     }
 
@@ -140,6 +159,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         _api.Logout();
         IsAuthenticated = false;
+        Articles.ExitImmersive();
         Password = "";
         LoginError = "";
         IsChangePasswordOpen = false;
@@ -186,6 +206,7 @@ public partial class MainWindowViewModel : ViewModelBase
         if (NewPassword != ConfirmPassword)
         {
             PasswordMessage = "两次输入的新密码不一致。";
+            ToastWarn("两次输入的新密码不一致。");
             return;
         }
 
@@ -194,6 +215,7 @@ public partial class MainWindowViewModel : ViewModelBase
             await Busy.RunAsync("正在修改密码…", () => _api.ChangePasswordAsync(CurrentPassword, NewPassword));
             PasswordSucceeded = true;
             PasswordMessage = "密码已更新。";
+            ToastSuccess("密码已更新。");
             CurrentPassword = "";
             NewPassword = "";
             ConfirmPassword = "";
@@ -201,6 +223,7 @@ public partial class MainWindowViewModel : ViewModelBase
         catch (Exception ex)
         {
             PasswordMessage = ex.Message;
+            ToastError(ex.Message);
         }
     }
 

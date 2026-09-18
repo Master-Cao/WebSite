@@ -6,6 +6,7 @@
         x:DataType="vm:MainWindowViewModel"
         Title="YJCabin 内容管理"
         Icon="/Assets/yjcabin-puppy.png"
+        WindowState="Maximized"
         Width="1280" Height="820"
         MinWidth="960" MinHeight="640">
   <Panel>
@@ -25,12 +26,14 @@
                Fill="#244A7AB0" />
     </Panel>
     <Grid IsVisible="{Binding IsAuthenticated}"
-          ColumnDefinitions="248,*"
+          ColumnDefinitions="Auto,*"
           ClipToBounds="True">
       <Border Grid.Column="0"
               Classes="glass"
+              Width="248"
               Padding="16,18"
-              Margin="12,12,0,12">
+              Margin="12,12,0,12"
+              IsVisible="{Binding !IsImmersiveWriting}">
         <DockPanel>
           <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="4,0,4,16">
             <TextBlock Classes="kicker" Text="YJCabin" />
@@ -86,7 +89,7 @@
       </Border>
 
       <ContentControl Grid.Column="1"
-                      Margin="12"
+                      Margin="{Binding IsImmersiveWriting, Converter={StaticResource ImmersiveMargin}}"
                       ClipToBounds="True"
                       Content="{Binding CurrentPage}">
         <ContentControl.DataTemplates>
@@ -180,13 +183,12 @@
             <Button Classes="primary" Content="保存" Command="{Binding ChangePasswordCommand}" />
             <Button Content="取消" Command="{Binding CloseChangePasswordCommand}" />
           </StackPanel>
-          <TextBlock Classes="kicker" Margin="0,12,0,0" IsVisible="{Binding PasswordSucceeded}" Text="{Binding PasswordMessage}" />
-          <TextBlock Classes="danger" Margin="0,12,0,0" IsVisible="{Binding HasPasswordError}" Text="{Binding PasswordMessage}" />
         </StackPanel>
       </Border>
     </Panel>
 
     <views:LoadingOverlay IsVisible="{Binding Busy.IsBusy}"
                           Message="{Binding Busy.Message}" />
+    <views:ToastHost />
   </Panel>
 </Window>

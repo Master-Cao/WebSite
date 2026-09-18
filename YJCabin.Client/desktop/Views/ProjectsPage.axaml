@@ -14,7 +14,7 @@
               <Button Classes="primary compact" Content="新建" Command="{Binding NewItemCommand}" />
               <Button Classes="compact" Content="刷新" Command="{Binding ReloadCommand}" />
             </StackPanel>
-            <TextBlock Classes="muted" VerticalAlignment="Center" Text="{Binding Message}" TextWrapping="Wrap" />
+            <TextBlock Classes="muted" VerticalAlignment="Center" Text="管理公开作品，点击卡片即可编辑。" />
           </DockPanel>
         </Border>
     </Border>
@@ -58,7 +58,6 @@
             <Button Classes="danger compact" Content="删除" Command="{Binding DeleteCommand}" IsEnabled="{Binding CanDelete}" />
             <Button Classes="compact" Content="返回" Command="{Binding CloseEditorCommand}" />
           </StackPanel>
-          <TextBlock Classes="muted" Text="{Binding Message}" TextWrapping="Wrap" />
         </StackPanel>
         <ScrollViewer>
           <StackPanel Spacing="12">

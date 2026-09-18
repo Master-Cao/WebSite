@@ -33,7 +33,7 @@ export function AboutPage() {
       </article>
       <aside className="glass panel">
         <h2 className="muted" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <img src="/yjcabin-cat.png" alt="" width={28} height={28} style={{ objectFit: "contain" }} />
+          <img src="/yjcabin-cat.webp" alt="" width={28} height={28} style={{ objectFit: "contain" }} />
           技能
         </h2>
         <ul className="tags" style={{ marginTop: 12 }}>
